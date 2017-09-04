@@ -1,5 +1,6 @@
 {
-  "name": "webgltexture-loader",
+  "private": true,
+  "name": "webgltexture-loader-libs",
   "version": "0.0.0",
   "description": "Generic & extensible texture loader utility",
   "main": "lib/index.js",
