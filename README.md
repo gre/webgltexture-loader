@@ -1,0 +1,142 @@
+# WebGLTextureLoader libraries
+
+The [gre/webgltexture-loader](https://github.com/gre/webgltexture-loader) repository hosts libraries around `webgltexture-loader`, utility to load various kind of textures and by supporting an extensible number of formats.
+
+The `webgltexture-loader` library is a core WebGL Texture loader implementation to be used by frameworks like `gl-react`. You need to build a small helper to hook things together (as things are initially uncoupled). That said, the following gist is a proof it's still viable to directly use it.
+
+**The gist**
+
+```js
+import { LoaderResolver } from "webgltexture-loader";
+import "webgltexture-loader-dom";
+
+const canvas = document.createElement("canvas"); document.body.appendChild(canvas);
+const gl = canvas.getContext("webgl");
+
+const resolver = new LoaderResolver(gl);
+
+function load (input) { // just an example (create your own load function based on needs)
+  const loader = resolver.resolve(input);
+  if (loader) {
+    return loader.load(input);
+  }
+  return Promise.reject();
+}
+
+load(
+  "https://i.imgur.com/wxqlQkh.jpg"
+  // just an example, many format supported here
+)
+.then(({ texture }) => {
+  const program = createDemoProgram(gl);
+  const tLocation = gl.getUniformLocation(program, "t");
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.uniform1i(tLocation, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+});
+
+function createDemoProgram (gl) {
+  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([-1, -1, -1, 4, 4, -1]),
+    gl.STATIC_DRAW
+  );
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(
+    vertexShader,
+    `\
+attribute vec2 p;
+varying vec2 uv;
+void main() {
+  gl_Position = vec4(p,0.0,1.0);
+  uv = 0.5 * (p+1.0);
+}`
+  );
+  gl.compileShader(vertexShader);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(
+    fragmentShader,
+    `\
+precision highp float;
+varying vec2 uv;
+uniform sampler2D t;
+void main() {
+  gl_FragColor = mix(texture2D(t, uv),  vec4(1.0), min(pow(2.*uv.x-1.,6.)+pow(2.*uv.y-1.,6.)+ 0.1 * step(fract(20.*uv.y+cos(16.*uv.x)), 0.2), 1.0));
+}`
+  );
+  gl.compileShader(fragmentShader);
+  var program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  gl.useProgram(program);
+  var p = gl.getAttribLocation(program, "p");
+  gl.enableVertexAttribArray(p);
+  gl.vertexAttribPointer(p, 2, gl.FLOAT, false, 0, 0);
+  return program;
+}
+```
+
+## WebGLTextureLoader ?
+
+a `WebGLTextureLoader<T>` is an object created with a `gl: WebGLRenderingContext` that implements loading a WebGLTexture with a given input / config object.
+
+```js
+type TextureAndSize = {
+  texture: WebGLTexture,
+  width: number,
+  height: number
+}
+
+class WebGLTextureLoader<T> {
+  constructor(gl: WebGLRenderingContext)
+  canLoad(input: any): boolean
+  load(input: T): Promise<TextureAndSize>
+  get(input: T): ?TextureAndSize
+  update(input: T)
+}
+```
+
+
+If `loader.canLoad(input)` is true, the loader can be used:
+
+`loader.get(input)` returns a **{texture}** object as soon as the input is loaded. Otherwise it returns null, and you need to call `loader.load(input)` (which returns a promise you can optionally use).
+
+> When the load(input) promise is fulfilled, it is guarantee that `loader.get(input)` returns a result. It is also guarantee that 2 call to the same `loader.load(input)` is idempotent and returns the same Promise.
+
+### Why is there both `get` and `load` API?
+
+The dual `get` and `load` is defined to allow the best of the 2 worlds paradigms: async and sync. Typically, you can call `get()` in a requestAnimationFrame loop (and call load if it fails so the future frames will eventually have it resolved). But, in a more async paradigm, you can wait the `load()` Promise.
+
+A second reason is that some Loader are simply sync by nature. For instance, the HTMLCanvasElement or ndarray loaders. (this is transparent when using the API).
+
+Th idea behind `get(input)` is also to allow functional/"descriptive" way like an object coming from React (e.g. in React, user sent again and again the full state tree and therefore don't keep state, input might just be an new object each time, the library do the reconciliation in some way).
+
+## LoaderResolver
+
+A LoaderResolver allow to resolve the first WebGLTextureLoader that `canLoad` the input.
+
+```js
+const maybeLoader = new LoaderResolver(
+  gl,
+  optionalRegistryToUse // don't provide to use globalRegistry
+).resolve(input);
+```
+
+## Available loaders
+
+Loaders implementation are available via various NPM packages. The idea of each is that they both expose the loader class but they will also automatically add itself in the globalRegistry (as soon as imported in the bundle). So typically you need to `import "webgltexture-loader-WHATEVER;"` them all and use `new LoaderResolver(gl)` to use the globalRegistry.
+
+- `webgltexture-loader-dom` add all **DOM only** loaders:
+  - `webgltexture-loader-dom-canvas` for a HTMLCanvasElement
+  - `webgltexture-loader-dom-video` for a HTMLVideoElement
+  - `webgltexture-loader-dom-image-url` support for image by giving it's URL (as a string input).
+- `webgltexture-loader-ndarray` add **NDArray loader** support.
+- `webgltexture-loader-react-native` add all **React Native** loaders (using react-native-webgl)
+  - `webgltexture-loader-react-native-config` add the generic Config format of react-native-webgl
+  - `webgltexture-loader-react-native-imagesource` add support of ImageSource (same format as in React Native Image source prop).
+- `webgltexture-loader-expo` exposes loaders for Expo (EXGLView). They might soon be replaced by `webgltexture-loader-react-native` if it gets migrated to react-native-webgl.

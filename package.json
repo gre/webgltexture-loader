@@ -1,0 +1,26 @@
+{
+  "name": "webgltexture-loader",
+  "version": "0.0.0",
+  "description": "Generic & extensible texture loader utility",
+  "main": "lib/index.js",
+  "files": ["src", "lib"],
+  "repository": "https://github.com/gre/webgltexture-loader",
+  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "6",
+    "babel-jest": "20",
+    "babel-preset-flow": "6",
+    "babel-preset-es2015": "6",
+    "babel-preset-stage-1": "6",
+    "flow-copy-source": "1",
+    "jest": "20",
+    "lerna": "^2.1.2"
+  },
+  "scripts": {
+    "test": "jest",
+    "compile": "./scripts/compile.sh",
+    "postinstall": "lerna bootstrap && npm run compile",
+    "publish": "npm run compile && lerna publish"
+  }
+}
