@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-react-native",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "collection of webgltexture-loader in react-native-webgl implementation context",
   "main": "lib/index.js",
   "files": [
@@ -12,6 +12,6 @@
   "license": "MIT",
   "dependencies": {
     "webgltexture-loader-react-native-config": "^0.0.0",
-    "webgltexture-loader-react-native-imagesource": "^0.0.1"
+    "webgltexture-loader-react-native-imagesource": "^0.0.2"
   }
 }
