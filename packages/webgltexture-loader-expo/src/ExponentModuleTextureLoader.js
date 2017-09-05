@@ -55,8 +55,6 @@ export const loadAsset = (module: number | { uri: string }): Promise<Asset> =>
 class ExponentModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   number | { uri: string }
 > {
-  static priority = -200;
-
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
 
   canLoad(input: any) {
@@ -72,8 +70,6 @@ class ExponentModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
 
   loadNoCache(module: *) {
     const { gl } = this;
-    // $FlowFixMe
-    const { __exglCtxId: exglCtxId } = gl;
     let disposed = false;
     const dispose = () => {
       disposed = true;

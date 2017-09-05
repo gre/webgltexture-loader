@@ -27,7 +27,7 @@ class ExponentGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
 
   canLoad(input: any) {
-    return available;
+    return available && typeof input === "object";
   }
 
   disposeTexture(texture: WebGLTexture) {
