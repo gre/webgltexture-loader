@@ -1,10 +1,12 @@
 # WebGLTextureLoader libraries
 
-The [gre/webgltexture-loader](https://github.com/gre/webgltexture-loader) repository hosts libraries around `webgltexture-loader`, utility to load various kind of textures and by supporting an extensible number of formats.
+[gre/webgltexture-loader](https://github.com/gre/webgltexture-loader) repository hosts `webgltexture-loader` libraries, utility to load & cache various kind of WebGLTexture with an extensible and loosely coupled system.
 
-The `webgltexture-loader` library is a core WebGL Texture loader implementation to be used by frameworks like `gl-react`. You need to build a small helper to hook things together (as things are initially uncoupled). That said, the following gist is a proof it's still viable to directly use it.
+The `webgltexture-loader` library is a core WebGL Texture loader implementation used by frameworks like `gl-react`.
 
 **The gist**
+
+> You usually need to build a small helper to hook things together (as things are initially uncoupled). That said, the following gist is a proof it's still viable to directly use it.
 
 ```js
 import { LoaderResolver } from "webgltexture-loader";
@@ -35,7 +37,12 @@ load(
   gl.uniform1i(tLocation, 0);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 });
+```
 
+<detail>
+<summary>createDemoProgram()</summary>
+
+```js
 function createDemoProgram (gl) {
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
   const buffer = gl.createBuffer();
@@ -80,6 +87,8 @@ void main() {
   return program;
 }
 ```
+
+</detail>
 
 ## WebGLTextureLoader ?
 
