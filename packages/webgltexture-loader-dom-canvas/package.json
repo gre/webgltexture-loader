@@ -3,14 +3,11 @@
   "version": "0.2.0",
   "description": "HTMLCanvasElement loader for webgltexture-loader",
   "main": "lib/CanvasTextureLoader.js",
-  "files": [
-    "src",
-    "lib"
-  ],
+  "files": ["src", "lib"],
   "repository": "https://github.com/gre/webgltexture-loader",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "webgltexture-loader": "^0.2.0"
   }
 }
