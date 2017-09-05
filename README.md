@@ -10,7 +10,7 @@ The `webgltexture-loader` library is a core WebGL Texture loader implementation 
 
 ```js
 import { LoaderResolver } from "webgltexture-loader";
-import "webgltexture-loader-dom";
+import "webgltexture-loader-dom"; // import support for DOM, including video, canvas or simple image url
 
 const canvas = document.createElement("canvas"); document.body.appendChild(canvas);
 const gl = canvas.getContext("webgl");
@@ -19,16 +19,10 @@ const resolver = new LoaderResolver(gl);
 
 function load (input) { // just an example (create your own load function based on needs)
   const loader = resolver.resolve(input);
-  if (loader) {
-    return loader.load(input);
-  }
-  return Promise.reject();
+  return loader ? loader.load(input) : Promise.reject("no loader supports the input "+input);
 }
 
-load(
-  "https://i.imgur.com/wxqlQkh.jpg"
-  // just an example, many format supported here
-)
+load("https://i.imgur.com/wxqlQkh.jpg") // just an example, many format supported here
 .then(({ texture }) => {
   const program = createDemoProgram(gl);
   const tLocation = gl.getUniformLocation(program, "t");
@@ -43,7 +37,7 @@ load(
 
 ## WebGLTextureLoader ?
 
-a `WebGLTextureLoader<T>` is an object created with a `gl: WebGLRenderingContext` that implements loading a WebGLTexture with a given input / config object.
+a `WebGLTextureLoader<T>` is an object created with a `WebGLRenderingContext` that can load and cache a WebGLTexture for a given input.
 
 ```js
 type TextureAndSize = {
@@ -53,7 +47,7 @@ type TextureAndSize = {
 }
 
 class WebGLTextureLoader<T> {
-  constructor(gl: WebGLRenderingContext)
+  constructor(gl: WebGLRenderingContext){}
   canLoad(input: any): boolean
   load(input: T): Promise<TextureAndSize>
   get(input: T): ?TextureAndSize
@@ -64,9 +58,9 @@ class WebGLTextureLoader<T> {
 
 If `loader.canLoad(input)` is true, the loader can be used:
 
-`loader.get(input)` returns a **{texture}** object as soon as the input is loaded. Otherwise it returns null, and you need to call `loader.load(input)` (which returns a promise you can optionally use).
+`loader.get(input)` returns a **{texture, width, height}** object if the input is loaded. Otherwise it returns null, and you need to call `loader.load(input)` to load the resource, which return a promise of that same object. Note that you can just stick with the `load` API.
 
-> When the load(input) promise is fulfilled, it is guarantee that `loader.get(input)` returns a result. It is also guarantee that 2 call to the same `loader.load(input)` is idempotent and returns the same Promise.
+> When the load(input) promise is fulfilled, it is guarantee that `loader.get(input)` returns a result that is `===` to the Promise result. It is also guarantee that 2 call to the same `loader.load(input)` is idempotent and returns the same Promise (by `===`).
 
 ### Why is there both `get` and `load` API?
 
@@ -78,14 +72,18 @@ Th idea behind `get(input)` is also to allow functional/"descriptive" way like a
 
 ## LoaderResolver
 
-A LoaderResolver allow to resolve the first WebGLTextureLoader that `canLoad` the input.
+A LoaderResolver is a tiny utility that instantiate the loaders and exposes a resolve method that returns the first WebGLTextureLoader that `canLoad` a given input.
 
 ```js
-const maybeLoader = new LoaderResolver(
-  gl,
-  optionalRegistryToUse // don't provide to use globalRegistry
-).resolve(input);
+const resolver = new LoaderResolver(gl); // instantiate once
+const maybeLoader = resolver.resolve(input); // use many times
+// then do your logic...
+// ... maybeLoader.get(input);
+// ... maybeLoader.load(input);
 ```
+
+> `LoaderResolver` also accept a second parameter that is the LoadersRegistry to use, by default it is the "globalRegistry".
+
 
 ## Available loaders
 
