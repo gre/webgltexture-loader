@@ -3,19 +3,14 @@
   "version": "0.3.0",
   "description": "ndarray loader for webgltexture-loader",
   "main": "lib/NDArrayTextureLoader.js",
-  "files": [
-    "src",
-    "lib"
-  ],
+  "files": ["src", "lib"],
   "repository": "https://github.com/gre/webgltexture-loader",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "ndarray": "^1.0.18",
     "ndarray-ops": "^1.2.2",
-    "typedarray-pool": "^1.1.0"
-  },
-  "peerDependencies": {
+    "typedarray-pool": "^1.1.0",
     "webgltexture-loader": "^0.2.0"
   }
 }
