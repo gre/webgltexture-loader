@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-expo",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "load any react-native-webgl 'config' object for webgltexture-loader",
   "main": "lib/index.js",
   "files": [
