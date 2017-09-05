@@ -1,12 +1,10 @@
 {
   "name": "webgltexture-loader",
   "version": "0.0.1",
-  "description": "Generic & extensible texture loader utility",
+  "description":
+    "load & cache various kind of WebGLTexture with an extensible and loosely coupled system",
   "main": "lib/index.js",
-  "files": [
-    "src",
-    "lib"
-  ],
+  "files": ["src", "lib"],
   "repository": "https://github.com/gre/webgltexture-loader",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT"
