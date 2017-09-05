@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-expo",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "load any react-native-webgl 'config' object for webgltexture-loader",
   "main": "lib/ConfigTextureLoader.js",
   "files": [
@@ -15,6 +15,6 @@
     "react-native": "*"
   },
   "dependencies": {
-    "webgltexture-loader": "^0.5.0"
+    "webgltexture-loader": "^0.6.0"
   }
 }

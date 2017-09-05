@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-react-native-imagesource",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "load a React Native ImageSource for react-native-webgl & webgltexture-loader",
   "main": "lib/ImageSourceTextureLoader.js",
   "files": [
@@ -11,6 +11,6 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "webgltexture-loader": "^0.5.0"
+    "webgltexture-loader": "^0.6.0"
   }
 }
