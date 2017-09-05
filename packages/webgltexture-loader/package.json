@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "description": "load & cache various kind of WebGLTexture with an extensible and loosely coupled system",
   "keywords": [
     "webgl",
