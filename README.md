@@ -84,7 +84,6 @@ const maybeLoader = resolver.resolve(input); // use many times
 
 > `LoaderResolver` also accept a second parameter that is the LoadersRegistry to use, by default it is the "globalRegistry".
 
-
 ## Available loaders
 
 Loaders implementation are available via various NPM packages. The idea of each is that they both expose the loader class but they will also automatically add itself in the globalRegistry (as soon as imported in the bundle). So typically you need to `import "webgltexture-loader-WHATEVER;"` them all and use `new LoaderResolver(gl)` to use the globalRegistry.
