@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-expo",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "load any react-native-webgl 'config' object for webgltexture-loader",
   "main": "lib/ConfigTextureLoader.js",
   "files": [
@@ -11,7 +11,7 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "webgltexture-loader": "^0.0.2"
+    "webgltexture-loader": "^0.1.0"
   },
   "peerDependencies": {
     "expo": "*",
