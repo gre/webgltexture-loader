@@ -59,13 +59,13 @@ const localFile = (uri: string) => {
   const promise = new Promise((success, failure) =>
       Image.getSize(uri, (width, height) => success({ width, height }), failure)
   );
-  promise.then(size => ({ ...size, uri }));
+  promise.then(size => ({ ...size, uri, localUri: uri }));
   remoteAssetCache[key] = promise;
   return promise;
 };
 
 export const loadAsset = (module: number | { uri: string }): Promise<Asset> =>
-  typeof module === "number" ? localAsset(module) : (module.uri.startsWith("file://") ? localFile(module.uri) : remoteAsset(module.uri));
+  typeof module === "number" ? localAsset(module) : ((module.uri.startsWith("file:") || module.uri.startsWith("data:")) ? localFile(module.uri) : remoteAsset(module.uri));
 
 class ExponentModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   number | { uri: string }
