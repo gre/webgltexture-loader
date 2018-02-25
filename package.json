@@ -2,6 +2,7 @@
   "private": true,
   "name": "webgltexture-loader-libs",
   "version": "0.0.0",
+  "workspaces": ["packages/*"],
   "description": "Generic & extensible texture loader utility",
   "main": "lib/index.js",
   "files": ["src", "lib"],
@@ -16,12 +17,13 @@
     "babel-preset-stage-1": "6",
     "flow-copy-source": "1",
     "jest": "20",
-    "lerna": "^2.1.2"
+    "lerna": "^2.9.0"
   },
   "scripts": {
+    "preinstall":
+      "node -e \"if (process.env.npm_execpath.indexOf('yarn') === -1) { console.log('\u001b[31mPlease use yarn\u001b[0m'); process.exit(1); }\"",
     "test": "jest",
-    "compile": "./scripts/compile.sh",
-    "postinstall": "lerna bootstrap && npm run compile",
-    "publish": "npm run compile && lerna publish"
+    "build": "./scripts/compile.sh",
+    "publish": "npm run build && lerna publish"
   }
 }

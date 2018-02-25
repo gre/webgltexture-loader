@@ -1,8 +1,6 @@
 {
-  "lerna": "2.1.2",
-  "packages": [
-    "packages/*"
-  ],
+  "lerna": "2.9.0",
+  "packages": ["packages/*"],
   "version": "0.8.0",
-  "registry": "https://registry.npmjs.org/"
+  "useWorkspaces": true
 }
