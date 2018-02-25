@@ -31,7 +31,8 @@ function convertFloatToUint8(out, inp) {
 export default (
   gl: WebGLRenderingContext,
   texture: WebGLTexture,
-  array: NDArray
+  array: NDArray,
+  floatSupported: boolean
 ) => {
   let dtype = array.dtype;
   let shape = array.shape.slice();
@@ -84,7 +85,7 @@ export default (
   } else {
     throw new Error("gl-texture2d: Invalid shape for texture");
   }
-  if (type === gl.FLOAT && !gl.getExtension("OES_texture_float")) {
+  if (type === gl.FLOAT && !floatSupported) {
     type = gl.UNSIGNED_BYTE;
     packed = false;
   }

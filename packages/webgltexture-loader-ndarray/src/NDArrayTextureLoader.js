@@ -7,6 +7,14 @@ import type { NDArray } from "ndarray";
 import drawNDArrayTexture from "./drawNDArrayTexture";
 
 class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCache<NDArray> {
+  floatSupported: boolean;
+  constructor(gl: *) {
+    super(gl);
+    this.floatSupported =
+      gl.getExtension("OES_texture_float") &&
+      gl.getExtension("OES_texture_float_linear");
+  }
+
   canLoad(obj: any) {
     return obj.shape && obj.data && obj.stride;
   }
@@ -20,7 +28,7 @@ class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCache<NDArray> {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     const [width, height] = input.shape;
-    drawNDArrayTexture(gl, texture, input);
+    drawNDArrayTexture(gl, texture, input, this.floatSupported);
     return { texture, width, height };
   }
 
@@ -29,7 +37,7 @@ class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCache<NDArray> {
     const { gl } = this;
     const { texture } = this.get(input);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    drawNDArrayTexture(gl, texture, input);
+    drawNDArrayTexture(gl, texture, input, this.floatSupported);
   }
 }
 
