@@ -13,13 +13,9 @@ const available = !!(
   NativeModules.ExponentGLObjectManager.createObjectAsync
 );
 
-if (!available) {
-  console.log(
-    "webgltexture-loader-expo: ExponentGLObjectManager.createObjectAsync is not available. Make sure to use the correct version of Expo"
-  );
-}
+let warned = false;
 
-class ExponentGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
+class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   Object
 > {
   static priority = -200;
@@ -27,6 +23,12 @@ class ExponentGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
 
   canLoad(input: any) {
+    if (!available && !warned) {
+      warned = true;
+      console.log(
+        "webgltexture-loader-expo: ExponentGLObjectManager.createObjectAsync is not available. Make sure to use the correct version of Expo"
+      );
+    }
     return available && typeof input === "object";
   }
 
@@ -51,22 +53,23 @@ class ExponentGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
     const dispose = () => {
       disposed = true;
     };
-    const promise = NativeModules.ExponentGLObjectManager
-      .createObjectAsync({ exglCtxId, texture: config })
-      .then(({ exglObjId }) => {
-        if (disposed) return neverEnding;
-        // $FlowFixMe
-        const texture = new WebGLTexture(exglObjId);
-        this.objIds.set(texture, exglObjId);
-        const width = 0;
-        const height = 0;
-        // ^ unfortunately there is no way to retrieve these
-        return { texture, width, height };
-      });
+    const promise = NativeModules.ExponentGLObjectManager.createObjectAsync({
+      exglCtxId,
+      texture: config
+    }).then(({ exglObjId }) => {
+      if (disposed) return neverEnding;
+      // $FlowFixMe
+      const texture = new WebGLTexture(exglObjId);
+      this.objIds.set(texture, exglObjId);
+      const width = 0;
+      const height = 0;
+      // ^ unfortunately there is no way to retrieve these
+      return { texture, width, height };
+    });
     return { promise, dispose };
   }
 }
 
-globalRegistry.add(ExponentGLObjectTextureLoader);
+globalRegistry.add(ExpoGLObjectTextureLoader);
 
-export default ExponentGLObjectTextureLoader;
+export default ExpoGLObjectTextureLoader;
