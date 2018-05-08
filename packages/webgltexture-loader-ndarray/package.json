@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-ndarray",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "ndarray loader for webgltexture-loader",
   "main": "lib/NDArrayTextureLoader.js",
   "files": [
