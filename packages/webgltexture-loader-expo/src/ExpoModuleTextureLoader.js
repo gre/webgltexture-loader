@@ -57,7 +57,7 @@ const localFile = (uri: string) => {
     return Promise.resolve(remoteAssetCache[key]);
   }
   const promise = new Promise((success, failure) =>
-      Image.getSize(uri, (width, height) => success({ width, height }), failure)
+    Image.getSize(uri, (width, height) => success({ width, height }), failure)
   );
   promise.then(size => ({ ...size, uri, localUri: uri }));
   remoteAssetCache[key] = promise;
@@ -65,9 +65,13 @@ const localFile = (uri: string) => {
 };
 
 export const loadAsset = (module: number | { uri: string }): Promise<Asset> =>
-  typeof module === "number" ? localAsset(module) : ((module.uri.startsWith("file:") || module.uri.startsWith("data:")) ? localFile(module.uri) : remoteAsset(module.uri));
+  typeof module === "number"
+    ? localAsset(module)
+    : module.uri.startsWith("file:") || module.uri.startsWith("data:")
+      ? localFile(module.uri)
+      : remoteAsset(module.uri);
 
-class ExponentModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
+class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   number | { uri: string }
 > {
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
@@ -112,6 +116,6 @@ class ExponentModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   }
 }
 
-globalRegistry.add(ExponentModuleTextureLoader);
+globalRegistry.add(ExpoModuleTextureLoader);
 
-export default ExponentModuleTextureLoader;
+export default ExpoModuleTextureLoader;

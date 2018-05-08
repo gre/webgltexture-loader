@@ -1,4 +1,9 @@
 //@flow
-import ExponentGLObjectTextureLoader from "./ExponentGLObjectTextureLoader";
-import ExponentModuleTextureLoader from "./ExponentModuleTextureLoader";
-export { ExponentGLObjectTextureLoader, ExponentModuleTextureLoader };
+import DeprecatedExpoGLObjectTextureLoader from "./DeprecatedExpoGLObjectTextureLoader";
+import ExpoCameraTextureLoader from "./ExpoCameraTextureLoader";
+import ExpoModuleTextureLoader from "./ExpoModuleTextureLoader";
+export {
+  DeprecatedExpoGLObjectTextureLoader,
+  ExpoCameraTextureLoader,
+  ExpoModuleTextureLoader
+};
