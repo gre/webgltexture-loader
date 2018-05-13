@@ -58,8 +58,7 @@ const localFile = (uri: string) => {
   }
   const promise = new Promise((success, failure) =>
     Image.getSize(uri, (width, height) => success({ width, height }), failure)
-  );
-  promise.then(size => ({ ...size, uri, localUri: uri }));
+  ).then(size => ({ ...size, uri, localUri: uri }));
   remoteAssetCache[key] = promise;
   return promise;
 };
