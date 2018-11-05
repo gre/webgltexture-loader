@@ -4,7 +4,6 @@ import {
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
 import { NativeModules } from "react-native";
-import Expo from "expo";
 
 const neverEnding = new Promise(() => {});
 
