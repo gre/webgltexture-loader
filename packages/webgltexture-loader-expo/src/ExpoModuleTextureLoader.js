@@ -9,7 +9,7 @@ import md5 from "./md5";
 
 const neverEnding = new Promise(() => {});
 
-type Asset = {
+type AssetModel = {
   width: number,
   height: number,
   uri: string,
@@ -63,7 +63,7 @@ const localFile = (uri: string) => {
   return promise;
 };
 
-export const loadAsset = (module: number | { uri: string }): Promise<Asset> =>
+export const loadAsset = (module: number | { uri: string }): Promise<AssetModel> =>
   typeof module === "number"
     ? localAsset(module)
     : module.uri.startsWith("file:") || module.uri.startsWith("data:")
