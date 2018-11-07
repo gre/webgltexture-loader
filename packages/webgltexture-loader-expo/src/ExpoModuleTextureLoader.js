@@ -4,12 +4,12 @@ import {
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
 import { Image } from "react-native";
-import Expo from "expo";
+import {Asset, FileSystem} from "expo";
 import md5 from "./md5";
 
 const neverEnding = new Promise(() => {});
 
-type Asset = {
+type AssetModel = {
   width: number,
   height: number,
   uri: string,
@@ -20,7 +20,7 @@ const hash = (module: number | { uri: string }) =>
   typeof module === "number" ? module : module.uri;
 
 const localAsset = (module: number) => {
-  const asset = Expo.Asset.fromModule(module);
+  const asset = Asset.fromModule(module);
   return asset.downloadAsync().then(() => asset);
 };
 
@@ -37,9 +37,9 @@ const remoteAsset = (uri: string) => {
     new Promise((success, failure) =>
       Image.getSize(uri, (width, height) => success({ width, height }), failure)
     ),
-    Expo.FileSystem.downloadAsync(
+    FileSystem.downloadAsync(
       uri,
-      Expo.FileSystem.documentDirectory + `ExponentAsset-${key}${ext}`,
+      FileSystem.documentDirectory + `ExponentAsset-${key}${ext}`,
       {
         cache: true
       }
@@ -63,7 +63,7 @@ const localFile = (uri: string) => {
   return promise;
 };
 
-export const loadAsset = (module: number | { uri: string }): Promise<Asset> =>
+export const loadAsset = (module: number | { uri: string }): Promise<AssetModel> =>
   typeof module === "number"
     ? localAsset(module)
     : module.uri.startsWith("file:") || module.uri.startsWith("data:")
