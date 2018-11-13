@@ -4,12 +4,12 @@ import {
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
 import { Image } from "react-native";
-import { Asset, FileSystem } from "expo";
+import {Asset, FileSystem} from "expo";
 import md5 from "./md5";
 
 const neverEnding = new Promise(() => {});
 
-type AssetType = {
+type AssetModel = {
   width: number,
   height: number,
   uri: string,
@@ -63,7 +63,7 @@ const localFile = (uri: string) => {
   return promise;
 };
 
-export const loadAsset = (module: number | { uri: string }): Promise<AssetType> =>
+export const loadAsset = (module: number | { uri: string }): Promise<AssetModel> =>
   typeof module === "number"
     ? localAsset(module)
     : module.uri.startsWith("file:") ||
