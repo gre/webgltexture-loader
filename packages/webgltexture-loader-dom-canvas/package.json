@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-dom-canvas",
-  "version": "0.6.0",
+  "version": "0.12.2",
   "description": "HTMLCanvasElement loader for webgltexture-loader",
   "main": "lib/CanvasTextureLoader.js",
   "files": [
@@ -11,6 +11,6 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "webgltexture-loader": "^0.6.0"
+    "webgltexture-loader": "^0.12.2"
   }
 }
