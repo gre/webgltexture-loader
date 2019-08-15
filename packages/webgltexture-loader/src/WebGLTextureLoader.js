@@ -25,24 +25,30 @@ export default class WebGLTextureLoader<T> {
   /**
    * Cancel and clear everything
    */
-  +dispose: () => void;
+  dispose() {}
 
   /**
    * Check if the loader can handle a given input
    */
-  +canLoad: (input: any) => boolean;
+  canLoad(input: any): boolean {
+    return false;
+  }
 
   /**
    * Load the resource by its input. returns a promise of {texture,width,height}.
    * idempotent: If load() is called twice with the same input, same promise is returned.
    */
-  +load: (input: T) => Promise<TextureAndSize>;
+  load(input: T): Promise<TextureAndSize> {
+    return Promise.reject("load() is not implemented");
+  }
 
   /**
    * try to get in sync the texture for a given input. otherwise null/undefined.
    * If null is returned, load() can be called in order to load the resource that will then be available in a future get() call.
    */
-  +get: (input: T) => ?TextureAndSize;
+  get(input: T): ?TextureAndSize {
+    return null;
+  }
 
   /**
    * sync the webgl texture with a loaded input. for instance for <video>/<canvas> elements this needs to be called recurrently (like in a requestAnimationFrame loop) to get the texture updated.

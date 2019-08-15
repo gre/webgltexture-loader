@@ -15,7 +15,9 @@ export default class LoadersRegistry {
     this._loaders.push(loader);
     this._loaders.sort(
       (a, b) =>
+        // $FlowFixMe
         (typeof b.priority === "number" ? b.priority : 0) -
+        // $FlowFixMe
         (typeof a.priority === "number" ? a.priority : 0)
     );
   }

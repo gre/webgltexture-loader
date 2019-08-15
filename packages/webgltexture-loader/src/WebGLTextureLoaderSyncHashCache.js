@@ -4,9 +4,13 @@ import type { TextureAndSize } from "./WebGLTextureLoader";
 
 class WebGLTextureLoaderSyncHashCache<T> extends WebGLTextureLoader<T> {
   // return a unique representation of the input (typically a hash, or anything that can be used as ref identifier)
-  +inputHash: (input: T) => *;
-  // An sync load function that does not cache (WebGLTextureLoaderAsyncHashCache do the caching with inputHash)
-  +getNoCache: (input: T) => TextureAndSize;
+  inputHash(input: T) {
+    return "";
+  }
+  // An async load function that does not cache (WebGLTextureLoaderAsyncHashCache do the caching with inputHash). it also should return a dispose function to cancel a pending load
+  getNoCache(input: T): TextureAndSize {
+    throw new Error("getNoCache must be implemented");
+  }
 
   results: Map<*, TextureAndSize> = new Map();
   promises: Map<*, Promise<TextureAndSize>> = new Map();

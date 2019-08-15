@@ -8,11 +8,18 @@ const neverEnding = new Promise(() => {});
  * A cache implementation of WebGLTextureLoader with a input hash function
  */
 class WebGLTextureLoaderAsyncHashCache<T> extends WebGLTextureLoader<T> {
-  +inputHash: (input: T) => *;
+  inputHash(input: T) {
+    return "";
+  }
   // An async load function that does not cache (WebGLTextureLoaderAsyncHashCache do the caching with inputHash). it also should return a dispose function to cancel a pending load
-  +loadNoCache: (
+  loadNoCache(
     input: T
-  ) => { promise: Promise<TextureAndSize>, dispose: Function };
+  ): { promise: Promise<TextureAndSize>, dispose: Function } {
+    return {
+      promise: Promise.reject(new Error("loadNoCache is not implemented")),
+      dispose: () => {}
+    };
+  }
 
   disposes: Map<*, Function> = new Map();
   inputs: Map<*, T> = new Map();
