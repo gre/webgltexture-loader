@@ -4,7 +4,7 @@ import {
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
 import { NativeModules, findNodeHandle } from "react-native";
-import { Camera } from "expo";
+import { Camera } from "expo-camera";
 
 const neverEnding = new Promise(() => {});
 
