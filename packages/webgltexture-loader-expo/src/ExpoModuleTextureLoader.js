@@ -4,7 +4,9 @@ import {
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
 import { Image } from "react-native";
-import {Asset, FileSystem} from "expo";
+import * as FileSystem from "expo-file-system";
+import {Asset} from "expo-asset";
+
 import md5 from "./md5";
 
 const neverEnding = new Promise(() => {});
