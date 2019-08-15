@@ -68,7 +68,12 @@ const localFile = (uri: string) => {
 export const loadAsset = (module: number | { uri: string }): Promise<AssetModel> =>
   typeof module === "number"
     ? localAsset(module)
-    : module.uri.startsWith("file:") || module.uri.startsWith("data:")
+    : module.uri.startsWith("file:") ||
+      module.uri.startsWith("data:") ||
+      module.uri.startsWith("asset:") || // All local paths in Android Expo standalone app
+      module.uri.startsWith("assets-library:") || // CameraRoll.getPhotos iOS
+      module.uri.startsWith("content:") || // CameraRoll.getPhotos Android
+      module.uri.startsWith("/") // Expo.takeSnapshotAsync in DEV in Expo 31
       ? localFile(module.uri)
       : remoteAsset(module.uri);
 
