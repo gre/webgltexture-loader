@@ -3,13 +3,13 @@ import {
   globalRegistry,
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
-import { NativeModules } from "react-native";
+import { NativeModulesProxy } from "@unimodules/core";
 
 const neverEnding = new Promise(() => {});
 
 const available = !!(
-  NativeModules.ExponentGLObjectManager &&
-  NativeModules.ExponentGLObjectManager.createObjectAsync
+  NativeModulesProxy.ExponentGLObjectManager &&
+  NativeModulesProxy.ExponentGLObjectManager.createObjectAsync
 );
 
 let warned = false;
@@ -34,7 +34,7 @@ class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   disposeTexture(texture: WebGLTexture) {
     const exglObjId = this.objIds.get(texture);
     if (exglObjId) {
-      NativeModules.ExponentGLObjectManager.destroyObjectAsync(exglObjId);
+      NativeModulesProxy.ExponentGLObjectManager.destroyObjectAsync(exglObjId);
     }
     this.objIds.delete(texture);
   }
@@ -52,7 +52,7 @@ class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
     const dispose = () => {
       disposed = true;
     };
-    const promise = NativeModules.ExponentGLObjectManager.createObjectAsync({
+    const promise = NativeModulesProxy.ExponentGLObjectManager.createObjectAsync({
       exglCtxId,
       texture: config
     }).then(({ exglObjId }) => {
