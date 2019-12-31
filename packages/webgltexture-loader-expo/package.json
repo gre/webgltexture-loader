@@ -12,7 +12,8 @@
   "license": "MIT",
   "peerDependencies": {
     "expo-camera": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "@unimodules/core": "*"
   },
   "dependencies": {
     "webgltexture-loader": "^0.12.2"

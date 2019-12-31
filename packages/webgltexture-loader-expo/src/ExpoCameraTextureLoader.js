@@ -3,14 +3,15 @@ import {
   globalRegistry,
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
-import { NativeModules, findNodeHandle } from "react-native";
+import { findNodeHandle } from "react-native";
+import { NativeModulesProxy } from "@unimodules/core";
 import { Camera } from "expo-camera";
 
 const neverEnding = new Promise(() => {});
 
 const available = !!(
-  NativeModules.ExponentGLObjectManager &&
-  NativeModules.ExponentGLObjectManager.createCameraTextureAsync
+  NativeModulesProxy.ExponentGLObjectManager &&
+  NativeModulesProxy.ExponentGLObjectManager.createCameraTextureAsync
 );
 
 let warned = false;
@@ -36,7 +37,7 @@ class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHashCache<Camera> {
   disposeTexture(texture: WebGLTexture) {
     const exglObjId = this.objIds.get(texture);
     if (exglObjId) {
-      NativeModules.ExponentGLObjectManager.destroyObjectAsync(exglObjId);
+      NativeModulesProxy.ExponentGLObjectManager.destroyObjectAsync(exglObjId);
     }
     this.objIds.delete(texture);
   }
