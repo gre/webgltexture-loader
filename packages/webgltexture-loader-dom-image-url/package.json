@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-dom-image-url",
-  "version": "0.12.2",
+  "version": "1.0.0",
   "description": "load an Image by its URL for webgltexture-loader",
   "main": "lib/ImageURLTextureLoader.js",
   "files": [
@@ -11,6 +11,6 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "webgltexture-loader": "^0.12.2"
+    "webgltexture-loader": "^1.0.0"
   }
 }
