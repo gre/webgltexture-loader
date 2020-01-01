@@ -2,7 +2,7 @@
   "name": "webgltexture-loader-expo",
   "version": "0.12.2",
   "description": "load basic expo 'config' object for webgltexture-loader",
-  "main": "index.js",
+  "main": "lib/index.js",
   "files": [
     "src",
     "lib"

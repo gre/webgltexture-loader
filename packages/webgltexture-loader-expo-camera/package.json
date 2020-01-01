@@ -2,7 +2,7 @@
   "name": "webgltexture-loader-expo-camera",
   "version": "0.12.2",
   "description": "load camera expo 'config' object for webgltexture-loader",
-  "main": "index.js",
+  "main": "lib/index.js",
   "files": [
     "src",
     "lib"
