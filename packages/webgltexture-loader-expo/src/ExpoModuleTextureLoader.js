@@ -5,7 +5,7 @@ import {
 } from "webgltexture-loader";
 import { Image } from "react-native";
 import * as FileSystem from "expo-file-system";
-import {Asset} from "expo-asset";
+import { Asset } from "expo-asset";
 
 import md5 from "./md5";
 
@@ -65,7 +65,9 @@ const localFile = (uri: string) => {
   return promise;
 };
 
-export const loadAsset = (module: number | { uri: string }): Promise<AssetModel> =>
+export const loadAsset = (
+  module: number | { uri: string }
+): Promise<AssetModel> =>
   typeof module === "number"
     ? localAsset(module)
     : module.uri.startsWith("file:") ||
@@ -74,8 +76,8 @@ export const loadAsset = (module: number | { uri: string }): Promise<AssetModel>
       module.uri.startsWith("assets-library:") || // CameraRoll.getPhotos iOS
       module.uri.startsWith("content:") || // CameraRoll.getPhotos Android
       module.uri.startsWith("/") // Expo.takeSnapshotAsync in DEV in Expo 31
-      ? localFile(module.uri)
-      : remoteAsset(module.uri);
+    ? localFile(module.uri)
+    : remoteAsset(module.uri);
 
 class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
   number | { uri: string }

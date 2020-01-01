@@ -14,9 +14,7 @@ const available = !!(
 
 let warned = false;
 
-class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
-  Object
-> {
+class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<Object> {
   static priority = -200;
 
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
@@ -52,10 +50,12 @@ class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHashCache<
     const dispose = () => {
       disposed = true;
     };
-    const promise = NativeModulesProxy.ExponentGLObjectManager.createObjectAsync({
-      exglCtxId,
-      texture: config
-    }).then(({ exglObjId }) => {
+    const promise = NativeModulesProxy.ExponentGLObjectManager.createObjectAsync(
+      {
+        exglCtxId,
+        texture: config
+      }
+    ).then(({ exglObjId }) => {
       if (disposed) return neverEnding;
       // $FlowFixMe
       const texture = new WebGLTexture(exglObjId);

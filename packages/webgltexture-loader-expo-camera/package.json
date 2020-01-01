@@ -1,7 +1,7 @@
 {
-  "name": "webgltexture-loader-expo",
+  "name": "webgltexture-loader-expo-camera",
   "version": "0.12.2",
-  "description": "load basic expo 'config' object for webgltexture-loader",
+  "description": "load camera expo 'config' object for webgltexture-loader",
   "main": "index.js",
   "files": [
     "src",
@@ -11,6 +11,7 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
+    "expo-camera": "*",
     "react-native": "*",
     "@unimodules/core": "*"
   },
