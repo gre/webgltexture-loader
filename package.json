@@ -15,15 +15,15 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.5.5",
-    "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "@babel/preset-flow": "^7.0.0",
-    "babel-jest": "24.8.0",
-    "flow-copy-source": "2.0.7",
-    "jest": "24.8.0",
-    "lerna": "^3.16.4"
+    "@babel/cli": "^7.7.7",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "@babel/preset-flow": "^7.7.4",
+    "babel-jest": "24.9.0",
+    "flow-copy-source": "2.0.9",
+    "jest": "24.9.0",
+    "lerna": "^3.20.1"
   },
   "scripts": {
     "preinstall": "node -e \"if (process.env.npm_execpath.indexOf('yarn') === -1) { console.log('\u001b[31mPlease use yarn\u001b[0m'); process.exit(1); }\"",
