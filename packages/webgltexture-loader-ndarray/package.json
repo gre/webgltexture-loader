@@ -11,9 +11,9 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "ndarray": "^1.0.18",
+    "ndarray": "^1.0.19",
     "ndarray-ops": "^1.2.2",
-    "typedarray-pool": "^1.1.0",
+    "typedarray-pool": "^1.2.0",
     "webgltexture-loader": "^1.0.0"
   }
 }
