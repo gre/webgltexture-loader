@@ -1,7 +1,7 @@
 //@flow
 import {
   WebGLTextureLoaderSyncHashCache,
-  globalRegistry
+  globalRegistry,
 } from "webgltexture-loader";
 import type { NDArray } from "ndarray";
 import drawNDArrayTexture from "./drawNDArrayTexture";
@@ -10,9 +10,7 @@ class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCache<NDArray> {
   floatSupported: boolean;
   constructor(gl: *) {
     super(gl);
-    this.floatSupported =
-      gl.getExtension("OES_texture_float") &&
-      gl.getExtension("OES_texture_float_linear");
+    this.floatSupported = gl.getExtension("OES_texture_float_linear");
   }
 
   canLoad(obj: any) {

@@ -7,7 +7,7 @@ import pool from "typedarray-pool";
 if (typeof Buffer === "undefined") {
   global.Buffer = class Buffer {
     // mock shim so pool don't crash..
-    static isBuffer = b => b instanceof Buffer;
+    static isBuffer = (b) => b instanceof Buffer;
   };
 }
 
@@ -34,6 +34,10 @@ export default (
   array: NDArray,
   floatSupported: boolean
 ) => {
+  const isWebGL1 =
+    typeof WebGLRenderingContext !== "undefined" &&
+    gl instanceof WebGLRenderingContext;
+
   let dtype = array.dtype;
   let shape = array.shape.slice();
   let maxSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -61,8 +65,9 @@ export default (
     dtype = "uint8";
   }
   let format = 0;
+  let internalformat = 0;
   if (shape.length === 2) {
-    format = gl.LUMINANCE;
+    internalformat = format = gl.LUMINANCE;
     shape = [shape[0], shape[1], 1];
     array = ndarray(
       array.data,
@@ -72,13 +77,21 @@ export default (
     );
   } else if (shape.length === 3) {
     if (shape[2] === 1) {
-      format = gl.ALPHA;
+      internalformat = format = gl.ALPHA;
+      if (!isWebGL1) {
+        floatSupported = false; // eject from WebGL2 because it seems not to correctly have a internalfomat for this. need to use uint8
+      }
     } else if (shape[2] === 2) {
-      format = gl.LUMINANCE_ALPHA;
+      internalformat = format = gl.LUMINANCE_ALPHA;
+      if (!isWebGL1) {
+        floatSupported = false; // eject from WebGL2 because it seems not to correctly have a internalfomat for this. need to use uint8
+      }
     } else if (shape[2] === 3) {
       format = gl.RGB;
+      internalformat = isWebGL1 ? gl.RGB : gl.RGB32F;
     } else if (shape[2] === 4) {
       format = gl.RGBA;
+      internalformat = isWebGL1 ? gl.RGBA : gl.RGBA32F;
     } else {
       throw new Error("gl-texture2d: Invalid shape for pixel coords");
     }
@@ -89,21 +102,24 @@ export default (
     type = gl.UNSIGNED_BYTE;
     packed = false;
   }
-  let buffer, buf_store;
+  let buffer;
   let size = array.size;
+  let store;
   if (!packed) {
     let stride = [shape[2], shape[2] * shape[0], 1];
-    buf_store = pool.malloc(size, dtype);
-    let buf_array = ndarray(buf_store, shape, stride, 0);
     if (
       (dtype === "float32" || dtype === "float64") &&
       type === gl.UNSIGNED_BYTE
     ) {
-      convertFloatToUint8(buf_array, array);
+      store = pool.malloc(size, "uint8");
+      let out = ndarray(store, shape, stride, 0);
+      convertFloatToUint8(out, array);
     } else {
-      ops.assign(buf_array, array);
+      store = pool.malloc(size, dtype);
+      let out = ndarray(store, shape, stride, 0);
+      ops.assign(out, array);
     }
-    buffer = buf_store.subarray(0, size);
+    buffer = store.subarray(0, size);
   } else if (array.offset === 0 && array.data.length === size) {
     buffer = array.data;
   } else {
@@ -112,7 +128,7 @@ export default (
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
-    format,
+    internalformat,
     shape[0],
     shape[1],
     0,
@@ -120,7 +136,7 @@ export default (
     type,
     buffer
   );
-  if (buf_store) {
-    pool.free(buf_store);
+  if (store) {
+    pool.free(store);
   }
 };
