@@ -1,87 +1,36 @@
 //@flow
 import {
   globalRegistry,
-  WebGLTextureLoaderAsyncHashCache
+  WebGLTextureLoaderAsyncHashCache,
 } from "webgltexture-loader";
-import { Image } from "react-native";
-import * as FileSystem from "expo-file-system";
+import AssetUtils from "expo-asset-utils";
 import { Asset } from "expo-asset";
 
-import md5 from "./md5";
-
 const neverEnding = new Promise(() => {});
-
-type AssetModel = {
-  width: number,
-  height: number,
-  uri: string,
-  localUri: string
-};
-
-const hash = (module: number | { uri: string }) =>
-  typeof module === "number" ? module : module.uri;
 
 const localAsset = (module: number) => {
   const asset = Asset.fromModule(module);
   return asset.downloadAsync().then(() => asset);
 };
 
-const remoteAssetCache = {};
-
-const remoteAsset = (uri: string) => {
-  const i = uri.lastIndexOf(".");
-  const ext = i !== -1 ? uri.slice(i) : ".jpg";
-  const key = md5(uri);
-  if (key in remoteAssetCache) {
-    return Promise.resolve(remoteAssetCache[key]);
-  }
-  const promise = Promise.all([
-    new Promise((success, failure) =>
-      Image.getSize(uri, (width, height) => success({ width, height }), failure)
-    ),
-    FileSystem.downloadAsync(
-      uri,
-      FileSystem.documentDirectory + `ExponentAsset-${key}${ext}`,
-      {
-        cache: true
-      }
-    )
-  ]).then(([size, asset]) => ({ ...size, uri, localUri: asset.uri }));
-  remoteAssetCache[key] = promise;
-  return promise;
+type AssetModel = {
+  width: number,
+  height: number,
+  uri: string,
+  localUri: string,
 };
 
-const localFile = (uri: string) => {
-  const i = uri.lastIndexOf(".");
-  const ext = i !== -1 ? uri.slice(i) : ".jpg";
-  const key = md5(uri);
-  if (key in remoteAssetCache) {
-    return Promise.resolve(remoteAssetCache[key]);
-  }
-  const promise = new Promise((success, failure) =>
-    Image.getSize(uri, (width, height) => success({ width, height }), failure)
-  ).then(size => ({ ...size, uri, localUri: uri }));
-  remoteAssetCache[key] = promise;
-  return promise;
-};
+type M = number | { uri: string } | AssetModel;
 
-export const loadAsset = (
-  module: number | { uri: string }
-): Promise<AssetModel> =>
+export const loadAsset = (module: M): Promise<AssetModel> =>
   typeof module === "number"
     ? localAsset(module)
-    : module.uri.startsWith("file:") ||
-      module.uri.startsWith("data:") ||
-      module.uri.startsWith("asset:") || // All local paths in Android Expo standalone app
-      module.uri.startsWith("assets-library:") || // CameraRoll.getPhotos iOS
-      module.uri.startsWith("content:") || // CameraRoll.getPhotos Android
-      module.uri.startsWith("/") // Expo.takeSnapshotAsync in DEV in Expo 31
-    ? localFile(module.uri)
-    : remoteAsset(module.uri);
+    : module.localUri
+    ? // $FlowFixMe
+      Promise.resolve(module)
+    : AssetUtils.resolveAsync(module.uri);
 
-class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
-  number | { uri: string }
-> {
+class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<M> {
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
 
   canLoad(input: any) {
@@ -101,12 +50,11 @@ class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<
     const dispose = () => {
       disposed = true;
     };
-    const promise = loadAsset(module).then(asset => {
+    const promise = loadAsset(module).then((asset) => {
       if (disposed) return neverEnding;
       const { width, height } = asset;
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      // $FlowFixMe
       gl.texImage2D(
         gl.TEXTURE_2D,
         0,
