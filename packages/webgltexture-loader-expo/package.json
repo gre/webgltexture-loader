@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-expo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "load basic expo 'config' object for webgltexture-loader",
   "main": "lib/index.js",
   "files": [
@@ -11,7 +11,7 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@unimodules/core": "*",
+    "expo-modules-core": "*",
     "react-native": "*"
   },
   "dependencies": {

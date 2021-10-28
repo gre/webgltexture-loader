@@ -4,10 +4,10 @@ import {
   WebGLTextureLoaderAsyncHashCache
 } from "webgltexture-loader";
 import { findNodeHandle } from "react-native";
-import { NativeModulesProxy } from "@unimodules/core";
+import { NativeModulesProxy } from "expo-modules-core";
 import { Camera } from "expo-camera";
 
-const neverEnding = new Promise(() => {});
+const neverEnding = new Promise(() => { });
 
 const available = !!(
   NativeModulesProxy.ExponentGLObjectManager &&
@@ -58,14 +58,14 @@ class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHashCache<Camera> {
     const promise: Promise<*> = !glView
       ? Promise.reject(new Error("GLViewRef not available"))
       : glView.createCameraTextureAsync(camera).then(texture => {
-          if (disposed) return neverEnding;
-          // $FlowFixMe
-          this.objIds.set(texture, texture.exglObjId);
-          const width = 0;
-          const height = 0;
-          // ^ any way to retrieve these ?
-          return { texture, width, height };
-        });
+        if (disposed) return neverEnding;
+        // $FlowFixMe
+        this.objIds.set(texture, texture.exglObjId);
+        const width = 0;
+        const height = 0;
+        // ^ any way to retrieve these ?
+        return { texture, width, height };
+      });
     return { promise, dispose };
   }
 }
