@@ -35,7 +35,7 @@ export default (
   floatSupported: boolean
 ) => {
   const isWebGL1 =
-    typeof WebGLRenderingContext !== "undefined" &&
+    typeof WebGLRenderingContext === "undefined" ||
     gl instanceof WebGLRenderingContext;
 
   let dtype = array.dtype;
