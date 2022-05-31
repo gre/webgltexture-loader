@@ -3,7 +3,7 @@ import {
   globalRegistry,
   WebGLTextureLoaderAsyncHashCache,
 } from "webgltexture-loader";
-import AssetUtils from "expo-asset-utils";
+import * as AssetUtils from "expo-asset-utils";
 import { Asset } from "expo-asset";
 
 const neverEnding = new Promise(() => {});
