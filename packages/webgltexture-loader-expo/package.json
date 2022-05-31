@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-expo",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "load basic expo 'config' object for webgltexture-loader",
   "main": "lib/index.js",
   "files": [
@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "expo-asset-utils": "^3.0.0",
-    "webgltexture-loader": "^1.0.0"
+    "webgltexture-loader": "^2.0.0"
   }
 }

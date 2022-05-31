@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-dom-video",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "HTMLVideoElement loader for webgltexture-loader",
   "main": "lib/VideoTextureLoader.js",
   "files": [
@@ -11,6 +11,6 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "webgltexture-loader": "^1.0.0"
+    "webgltexture-loader": "^2.0.0"
   }
 }
