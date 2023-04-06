@@ -15,7 +15,6 @@
     "react-native": "*"
   },
   "dependencies": {
-    "expo-asset-utils": "^3.0.0",
     "webgltexture-loader": "^2.0.0"
   }
 }
