@@ -3,15 +3,10 @@ import {
   globalRegistry,
   WebGLTextureLoaderAsyncHashCache,
 } from "webgltexture-loader";
-import * as AssetUtils from "expo-asset-utils";
+import { Image } from "react-native"
 import { Asset } from "expo-asset";
 
 const neverEnding = new Promise(() => {});
-
-const localAsset = (module: number) => {
-  const asset = Asset.fromModule(module);
-  return asset.downloadAsync().then(() => asset);
-};
 
 type AssetModel = {
   width: number,
@@ -22,13 +17,22 @@ type AssetModel = {
 
 type M = number | { uri: string } | AssetModel;
 
-export const loadAsset = (module: M): Promise<AssetModel> =>
-  typeof module === "number"
-    ? localAsset(module)
-    : module.localUri
-    ? // $FlowFixMe
-      Promise.resolve(module)
-    : AssetUtils.resolveAsync(module.uri);
+export const loadAsset = (module: M): Promise<AssetModel> => {
+  if (typeof module === "object" && module.localUri) {
+    return Promise.resolve(module);
+  }
+  if (typeof module === "number") {
+    return Asset.fromModule(module).downloadAsync();
+  }
+  return Asset.loadAsync(module.uri).then(async ([asset]) => {
+    const { width, height } = await new Promise((resolve, reject) => {
+      Image.getSize(asset.localUri, (width, height) => resolve({ width, height }), reject);
+    })
+    asset.width = width
+    asset.height = height;
+    return asset;
+  })
+}
 
 class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<M> {
   objIds: WeakMap<WebGLTexture, number> = new WeakMap();
