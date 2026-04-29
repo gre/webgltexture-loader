@@ -15,5 +15,9 @@
     "ndarray-ops": "^1.2.2",
     "typedarray-pool": "^1.2.0",
     "webgltexture-loader": "^2.0.0"
+  },
+  "types": "lib/NDArrayTextureLoader.d.ts",
+  "scripts": {
+    "build": "tsc"
   }
 }
