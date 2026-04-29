@@ -12,5 +12,9 @@
   "license": "MIT",
   "dependencies": {
     "webgltexture-loader": "^2.0.0"
+  },
+  "types": "lib/ImageSourceTextureLoader.d.ts",
+  "scripts": {
+    "build": "tsc"
   }
 }

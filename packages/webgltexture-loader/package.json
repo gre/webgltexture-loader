@@ -9,10 +9,14 @@
     "loader"
   ],
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "src",
     "lib"
   ],
+  "scripts": {
+    "build": "tsc"
+  },
   "repository": "https://github.com/gre/webgltexture-loader",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "license": "MIT"

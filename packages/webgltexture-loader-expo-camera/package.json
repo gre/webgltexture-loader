@@ -17,5 +17,9 @@
   },
   "dependencies": {
     "webgltexture-loader": "^2.0.0"
+  },
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc"
   }
 }
