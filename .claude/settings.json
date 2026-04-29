@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(corepack yarn test)",
+      "Bash(corepack yarn build)",
+      "Bash(corepack yarn lint)",
+      "Bash(corepack yarn typecheck)",
+      "Bash(corepack yarn format)",
+      "Bash(corepack yarn install)",
+      "Bash(corepack yarn install --immutable)",
+      "Bash(corepack yarn biome check)",
+      "Bash(corepack yarn changeset status)",
+      "Bash(corepack yarn npm info *)",
+      "Bash(npm view *)"
+    ]
+  }
+}
