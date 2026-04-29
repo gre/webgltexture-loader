@@ -9,8 +9,8 @@ import { Asset } from "expo-asset";
 const neverEnding: Promise<never> = new Promise(() => {});
 
 type AssetModel = {
-  width: number;
-  height: number;
+  width: number | null;
+  height: number | null;
   uri: string;
   localUri?: string | null;
 };
@@ -54,7 +54,15 @@ export default class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHash
     };
     const promise = loadAsset(module).then((asset) => {
       if (disposed) return neverEnding;
-      const { width, height } = asset;
+      const { width, height, uri } = asset;
+      // expo-asset can return null width/height on iOS/Android for remote
+      // images (tracked in PR #41). Fail loudly with the URI rather than
+      // pass NaN to texImage2D.
+      if (typeof width !== "number" || typeof height !== "number") {
+        throw new Error(
+          `Expo asset has no dimensions (width=${width}, height=${height}, uri=${uri})`
+        );
+      }
       const texture = createTexture(gl);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       // Expo's gl shim accepts an Asset where standard WebGL expects an

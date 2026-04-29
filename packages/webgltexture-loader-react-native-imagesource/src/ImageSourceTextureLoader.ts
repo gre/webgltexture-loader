@@ -12,9 +12,12 @@ interface RNGLExtension {
 }
 
 export default class ImageSourceTextureLoader extends WebGLTextureLoaderAsyncHashCache<ImageSource> {
-  rngl: RNGLExtension = this.gl.getExtension("RN") as unknown as RNGLExtension;
+  rngl: RNGLExtension | null = this.gl.getExtension(
+    "RN"
+  ) as unknown as RNGLExtension | null;
 
   override canLoad(input: unknown): boolean {
+    if (!this.rngl) return false;
     if (typeof input === "number") return true;
     return (
       typeof input === "object" &&
@@ -24,7 +27,7 @@ export default class ImageSourceTextureLoader extends WebGLTextureLoaderAsyncHas
   }
 
   override disposeTexture(texture: WebGLTexture): void {
-    this.rngl.unloadTexture(texture);
+    this.rngl?.unloadTexture(texture);
   }
 
   override inputHash(input: ImageSource) {
@@ -33,7 +36,9 @@ export default class ImageSourceTextureLoader extends WebGLTextureLoaderAsyncHas
   }
 
   override loadNoCache(image: ImageSource) {
-    const promise = this.rngl.loadTexture({ yflip: true, image });
+    const promise = this.rngl
+      ? this.rngl.loadTexture({ yflip: true, image })
+      : Promise.reject(new Error("react-native-webgl 'RN' extension not available"));
     const dispose = () => {};
     return { promise, dispose };
   }

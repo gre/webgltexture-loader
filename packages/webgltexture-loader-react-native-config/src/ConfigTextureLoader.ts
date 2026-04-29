@@ -18,14 +18,16 @@ interface RNGLExtension {
 export default class ConfigTextureLoader extends WebGLTextureLoaderAsyncHashCache<Config> {
   static priority = -100;
 
-  rngl: RNGLExtension = this.gl.getExtension("RN") as unknown as RNGLExtension;
+  rngl: RNGLExtension | null = this.gl.getExtension(
+    "RN"
+  ) as unknown as RNGLExtension | null;
 
   override canLoad(input: unknown): boolean {
-    return typeof input === "object" && input !== null;
+    return !!this.rngl && typeof input === "object" && input !== null;
   }
 
   override disposeTexture(texture: WebGLTexture): void {
-    this.rngl.unloadTexture(texture);
+    this.rngl?.unloadTexture(texture);
   }
 
   override inputHash(config: Config) {
@@ -34,7 +36,9 @@ export default class ConfigTextureLoader extends WebGLTextureLoaderAsyncHashCach
   }
 
   override loadNoCache(config: Config) {
-    const promise = this.rngl.loadTexture(config);
+    const promise = this.rngl
+      ? this.rngl.loadTexture(config)
+      : Promise.reject(new Error("react-native-webgl 'RN' extension not available"));
     const dispose = () => {};
     return { promise, dispose };
   }
