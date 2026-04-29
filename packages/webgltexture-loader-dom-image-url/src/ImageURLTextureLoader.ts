@@ -7,7 +7,7 @@ import {
 function loadImage(
   src: string,
   success: (img: HTMLImageElement) => void,
-  failure: (e: unknown) => void
+  failure: (e: unknown) => void,
 ): () => void {
   let img: HTMLImageElement | null = new window.Image();
   if (src.slice(0, 5) !== "data:") {
@@ -45,7 +45,7 @@ export default class ImageURLTextureLoader extends WebGLTextureLoaderAsyncHashCa
     let dispose: () => void = () => {};
     const promise = new Promise<HTMLImageElement>((resolve, reject) => {
       dispose = loadImage(src, resolve, (e) =>
-        reject(new Error("image load failed", { cause: e }))
+        reject(new Error("image load failed", { cause: e })),
       );
     }).then((img) => {
       const { width, height } = img;

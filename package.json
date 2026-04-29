@@ -1,31 +1,43 @@
 {
-  "private": true,
   "name": "webgltexture-loader-libs",
   "version": "0.0.0",
+  "private": true,
+  "description": "Generic & extensible texture loader utility",
+  "license": "MIT",
+  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
+  "repository": "https://github.com/gre/webgltexture-loader",
   "workspaces": [
     "packages/*"
   ],
-  "description": "Generic & extensible texture loader utility",
-  "repository": "https://github.com/gre/webgltexture-loader",
-  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
-  "license": "MIT",
-  "engines": {
-    "node": ">=22"
+  "scripts": {
+    "test": "jest",
+    "build": "yarn workspaces foreach -Apt run build",
+    "lint": "oxlint",
+    "format": "oxfmt --check \"packages/**/*.{ts,tsx}\" \"jest.config.js\"",
+    "format:fix": "oxfmt \"packages/**/*.{ts,tsx}\" \"jest.config.js\"",
+    "typecheck": "yarn workspaces foreach -A run typecheck",
+    "changeset:version": "changeset version",
+    "release": "yarn build && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "@types/jest": "^30.0.0",
     "@types/ndarray": "^1.0.14",
     "@types/node": "^25.6.0",
+    "gl": "^9.0.0-rc.10",
     "jest": "^30.3.0",
+    "oxfmt": "^0.47.0",
+    "oxlint": "^1.62.0",
     "ts-jest": "^29",
     "typescript": "^6"
   },
-  "scripts": {
-    "test": "jest",
-    "build": "yarn workspaces foreach -Apt run build",
-    "changeset:version": "changeset version",
-    "release": "yarn build && changeset publish"
+  "dependenciesMeta": {
+    "gl": {
+      "built": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "packageManager": "yarn@4.14.1+sha512.64df448055b2d37ba269d7db535a469b8da93f8ef1140c25fd7a83c00a8fbaacb214ca0e02553b92a2c54cef78bb67d0b4817fab02001df0e24fac0faccc3b42"
 }

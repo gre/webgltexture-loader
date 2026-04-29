@@ -1,8 +1,6 @@
 import WebGLTextureLoader, { type TextureAndSize } from "./WebGLTextureLoader.js";
 
-export default class WebGLTextureLoaderSyncHashCache<
-  T
-> extends WebGLTextureLoader<T> {
+export default class WebGLTextureLoaderSyncHashCache<T> extends WebGLTextureLoader<T> {
   inputHash(_input: T): unknown {
     return "";
   }

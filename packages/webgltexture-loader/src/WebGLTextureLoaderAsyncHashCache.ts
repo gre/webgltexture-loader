@@ -2,9 +2,7 @@ import WebGLTextureLoader, { type TextureAndSize } from "./WebGLTextureLoader.js
 
 const neverEnding: Promise<never> = new Promise(() => {});
 
-export default class WebGLTextureLoaderAsyncHashCache<
-  T
-> extends WebGLTextureLoader<T> {
+export default class WebGLTextureLoaderAsyncHashCache<T> extends WebGLTextureLoader<T> {
   inputHash(_input: T): unknown {
     return "";
   }
@@ -28,10 +26,8 @@ export default class WebGLTextureLoaderAsyncHashCache<
 
   override dispose(): void {
     const { promises, results, inputs, disposes } = this;
-    disposes.forEach((d) => d());
-    results.forEach((result) => {
-      this.disposeTexture(result.texture);
-    });
+    for (const d of disposes.values()) d();
+    for (const result of results.values()) this.disposeTexture(result.texture);
     promises.clear();
     results.clear();
     inputs.clear();

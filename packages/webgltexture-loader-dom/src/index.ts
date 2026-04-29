@@ -1,5 +1,5 @@
 import CanvasTextureLoader from "webgltexture-loader-dom-canvas";
-import VideoTextureLoader from "webgltexture-loader-dom-video";
 import ImageURLTextureLoader from "webgltexture-loader-dom-image-url";
+import VideoTextureLoader from "webgltexture-loader-dom-video";
 
-export { CanvasTextureLoader, VideoTextureLoader, ImageURLTextureLoader };
+export { CanvasTextureLoader, ImageURLTextureLoader, VideoTextureLoader };
