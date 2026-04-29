@@ -106,4 +106,51 @@ describeGL("NDArrayTextureLoader against headless-gl", () => {
     expect(() => loader.get(arr)).toThrow(/Invalid texture size/);
     loader.dispose();
   });
+
+  // Integer dtype fallbacks under WebGL1.
+  // headless-gl is WebGL1 only, so the WebGL2 integer texture paths
+  // (R16UI, RG16UI, ...) cannot be exercised in CI. We only cover the
+  // uint8 fallback and the one-time console.warn behavior here.
+  // We isolate the module to reset the per-process warned-dtype memoization
+  // between tests.
+  describe("integer dtype fallback (WebGL1)", () => {
+    let warnSpy: jest.SpyInstance;
+    let LoaderCtor: typeof NDArrayTextureLoader;
+    let nd: typeof ndarray;
+
+    beforeEach(() => {
+      jest.isolateModules(() => {
+        LoaderCtor = require("./NDArrayTextureLoader.js").default;
+        nd = require("ndarray");
+      });
+      warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    test("uint16 ndarray on WebGL1 warns once and creates a fallback texture", () => {
+      const loader = new LoaderCtor(gl);
+      const data = new Uint16Array([1, 2, 3, 4]);
+      const arr = nd(data, [2, 2]);
+      const result = loader.get(arr);
+      expect(result.width).toBe(2);
+      expect(result.height).toBe(2);
+      expect(gl.isTexture(result.texture)).toBe(true);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toMatch(/uint16/);
+      loader.dispose();
+    });
+
+    test("loading the same dtype twice only warns once", () => {
+      const loader = new LoaderCtor(gl);
+      const a = nd(new Uint16Array([1, 2, 3, 4]), [2, 2]);
+      const b = nd(new Uint16Array([5, 6, 7, 8]), [2, 2]);
+      loader.get(a);
+      loader.get(b);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      loader.dispose();
+    });
+  });
 });
