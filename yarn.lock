@@ -2495,19 +2495,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-asset-utils@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "expo-asset-utils@npm:3.0.0"
-  peerDependencies:
-    expo-asset: "*"
-    expo-file-system: "*"
-    expo-font: "*"
-    expo-modules-core: "*"
-    react-native: "*"
-  checksum: 10c0/bfb97ec92dede4412a8d8b4dc13e0e0aab358c0a57852bd48506e12a19a6f17f20d7281172007ad4733ce1782658aecf6932c9ba8b47b2d5245cf2830f48ef69
-  languageName: node
-  linkType: hard
-
 "exponential-backoff@npm:^3.1.1":
   version: 3.1.3
   resolution: "exponential-backoff@npm:3.1.3"
@@ -5099,9 +5086,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-expo@workspace:packages/webgltexture-loader-expo"
   dependencies:
-    expo-asset-utils: "npm:^3.0.0"
     webgltexture-loader: "npm:^2.0.0"
   peerDependencies:
+    expo-asset: "*"
     expo-modules-core: "*"
     react-native: "*"
   languageName: unknown
