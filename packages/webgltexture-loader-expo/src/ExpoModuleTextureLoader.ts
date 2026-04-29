@@ -1,5 +1,5 @@
 import { Asset } from "expo-asset";
-import * as AssetUtils from "expo-asset-utils";
+import { Image } from "react-native";
 import {
   createTexture,
   globalRegistry,
@@ -17,19 +17,43 @@ type AssetModel = {
 
 type Input = number | { uri: string } | AssetModel;
 
-const localAsset = (module: number): Promise<Asset> => {
-  const asset = Asset.fromModule(module);
-  return asset.downloadAsync().then(() => asset);
-};
+const getImageSize = (uri: string): Promise<{ width: number; height: number }> =>
+  new Promise((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      (error) => reject(new Error(`Image.getSize failed for ${uri}`, { cause: error })),
+    );
+  });
 
-export const loadAsset = (module: Input): Promise<AssetModel> => {
+export const loadAsset = async (module: Input): Promise<AssetModel> => {
+  // 1. Numeric module id (`require("./img.png")`) — download via Asset.
   if (typeof module === "number") {
-    return localAsset(module) as Promise<unknown> as Promise<AssetModel>;
+    return Asset.fromModule(module).downloadAsync();
   }
-  if ("localUri" in module && module.localUri) {
-    return Promise.resolve(module as AssetModel);
+
+  // 2. Pre-resolved asset with concrete dimensions — trust the caller.
+  const m = module as Partial<AssetModel> & { uri: string };
+  if (typeof m.width === "number" && typeof m.height === "number") {
+    return m as AssetModel;
   }
-  return AssetUtils.resolveAsync(module.uri) as Promise<AssetModel>;
+
+  // 3. Pre-resolved local file but dimensions are missing/null — just measure.
+  if (m.localUri) {
+    const { width, height } = await getImageSize(m.localUri);
+    return { ...m, width, height };
+  }
+
+  // 4. Bare URI — download then measure (expo-asset returns null width/height
+  //    for remote URIs on iOS/Android, hence Image.getSize).
+  const [asset] = await Asset.loadAsync(m.uri);
+  if (!asset) {
+    throw new Error(`Asset.loadAsync returned no asset for ${m.uri}`);
+  }
+  const { width, height } = await getImageSize(asset.localUri ?? asset.uri);
+  asset.width = width;
+  asset.height = height;
+  return asset;
 };
 
 export default class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHashCache<Input> {
@@ -55,9 +79,6 @@ export default class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHash
     const promise = loadAsset(module).then((asset) => {
       if (disposed) return neverEnding;
       const { width, height, uri } = asset;
-      // expo-asset can return null width/height on iOS/Android for remote
-      // images (tracked in PR #41). Fail loudly with the URI rather than
-      // pass NaN to texImage2D.
       if (typeof width !== "number" || typeof height !== "number") {
         throw new Error(
           `Expo asset has no dimensions (width=${width}, height=${height}, uri=${uri})`,
