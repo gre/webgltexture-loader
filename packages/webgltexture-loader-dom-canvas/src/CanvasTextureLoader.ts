@@ -1,7 +1,7 @@
 import {
-  WebGLTextureLoaderSyncHashCache,
   createTexture,
   globalRegistry,
+  WebGLTextureLoaderSyncHashCache,
 } from "webgltexture-loader";
 
 export default class CanvasTextureLoader extends WebGLTextureLoaderSyncHashCache<HTMLCanvasElement> {

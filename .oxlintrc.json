@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off"
+  },
+  "rules": {
+    "no-explicit-any": "off",
+    "no-non-null-assertion": "off",
+    "no-underscore-dangle": "off",
+    "no-extraneous-class": "off",
+    "prefer-add-event-listener": "off",
+    "consistent-function-scoping": "off"
+  },
+  "ignorePatterns": ["**/lib/**", "**/node_modules/**", ".yarn/**"]
+}

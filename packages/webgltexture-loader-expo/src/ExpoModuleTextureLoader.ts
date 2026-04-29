@@ -1,10 +1,10 @@
+import { Asset } from "expo-asset";
+import * as AssetUtils from "expo-asset-utils";
 import {
   createTexture,
   globalRegistry,
   WebGLTextureLoaderAsyncHashCache,
 } from "webgltexture-loader";
-import * as AssetUtils from "expo-asset-utils";
-import { Asset } from "expo-asset";
 
 const neverEnding: Promise<never> = new Promise(() => {});
 
@@ -60,7 +60,7 @@ export default class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHash
       // pass NaN to texImage2D.
       if (typeof width !== "number" || typeof height !== "number") {
         throw new Error(
-          `Expo asset has no dimensions (width=${width}, height=${height}, uri=${uri})`
+          `Expo asset has no dimensions (width=${width}, height=${height}, uri=${uri})`,
         );
       }
       const texture = createTexture(gl);
@@ -76,7 +76,7 @@ export default class ExpoModuleTextureLoader extends WebGLTextureLoaderAsyncHash
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        asset as unknown as ArrayBufferView
+        asset as unknown as ArrayBufferView,
       );
       return { texture, width, height };
     });

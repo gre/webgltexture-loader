@@ -1,7 +1,7 @@
 import {
   globalRegistry,
-  WebGLTextureLoaderAsyncHashCache,
   type TextureAndSize,
+  WebGLTextureLoaderAsyncHashCache,
 } from "webgltexture-loader";
 
 type ImageSource = number | { uri: string };
@@ -12,9 +12,7 @@ interface RNGLExtension {
 }
 
 export default class ImageSourceTextureLoader extends WebGLTextureLoaderAsyncHashCache<ImageSource> {
-  rngl: RNGLExtension | null = this.gl.getExtension(
-    "RN"
-  ) as unknown as RNGLExtension | null;
+  rngl: RNGLExtension | null = this.gl.getExtension("RN") as unknown as RNGLExtension | null;
 
   override canLoad(input: unknown): boolean {
     if (!this.rngl) return false;

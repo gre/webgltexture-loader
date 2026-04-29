@@ -1,7 +1,7 @@
 import {
   globalRegistry,
-  WebGLTextureLoaderAsyncHashCache,
   type TextureAndSize,
+  WebGLTextureLoaderAsyncHashCache,
 } from "webgltexture-loader";
 
 type Config = Record<string, unknown>;
@@ -18,9 +18,7 @@ interface RNGLExtension {
 export default class ConfigTextureLoader extends WebGLTextureLoaderAsyncHashCache<Config> {
   static priority = -100;
 
-  rngl: RNGLExtension | null = this.gl.getExtension(
-    "RN"
-  ) as unknown as RNGLExtension | null;
+  rngl: RNGLExtension | null = this.gl.getExtension("RN") as unknown as RNGLExtension | null;
 
   override canLoad(input: unknown): boolean {
     return !!this.rngl && typeof input === "object" && input !== null;

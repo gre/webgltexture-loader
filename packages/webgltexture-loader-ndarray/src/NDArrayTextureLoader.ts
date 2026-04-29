@@ -1,9 +1,9 @@
+import type { NdArray } from "ndarray";
 import {
-  WebGLTextureLoaderSyncHashCache,
   createTexture,
   globalRegistry,
+  WebGLTextureLoaderSyncHashCache,
 } from "webgltexture-loader";
-import type { NdArray } from "ndarray";
 import drawNDArrayTexture from "./drawNDArrayTexture.js";
 
 export default class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCache<NdArray> {
@@ -16,7 +16,7 @@ export default class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCach
 
   override canLoad(input: unknown): boolean {
     const obj = input as { shape?: unknown; data?: unknown; stride?: unknown };
-    return !!(obj && obj.shape && obj.data && obj.stride);
+    return !!(obj?.shape && obj.data && obj.stride);
   }
 
   override inputHash(input: NdArray) {
@@ -28,7 +28,7 @@ export default class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCach
     const texture = createTexture(gl);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     const [width, height] = input.shape;
-    drawNDArrayTexture(gl, texture, input, this.floatSupported);
+    drawNDArrayTexture(gl, input, this.floatSupported);
     return { texture, width, height };
   }
 
@@ -37,7 +37,7 @@ export default class NDArrayTextureLoader extends WebGLTextureLoaderSyncHashCach
     const result = this.get(input);
     if (!result) return;
     gl.bindTexture(gl.TEXTURE_2D, result.texture);
-    drawNDArrayTexture(gl, result.texture, input, this.floatSupported);
+    drawNDArrayTexture(gl, input, this.floatSupported);
   }
 }
 

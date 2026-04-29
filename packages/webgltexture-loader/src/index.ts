@@ -1,21 +1,17 @@
-import WebGLTextureLoader, {
-  createTexture,
-  type TextureAndSize,
-} from "./WebGLTextureLoader.js";
+import globalRegistry from "./globalRegistry.js";
+import LoaderResolver from "./LoaderResolver.js";
+import LoadersRegistry from "./LoadersRegistry.js";
+import WebGLTextureLoader, { createTexture, type TextureAndSize } from "./WebGLTextureLoader.js";
 import WebGLTextureLoaderAsyncHashCache from "./WebGLTextureLoaderAsyncHashCache.js";
 import WebGLTextureLoaderSyncHashCache from "./WebGLTextureLoaderSyncHashCache.js";
-import LoadersRegistry from "./LoadersRegistry.js";
-import LoaderResolver from "./LoaderResolver.js";
-import globalRegistry from "./globalRegistry.js";
 
+export type { TextureAndSize };
 export {
   createTexture,
   globalRegistry,
-  LoadersRegistry,
   LoaderResolver,
+  LoadersRegistry,
   WebGLTextureLoader,
   WebGLTextureLoaderAsyncHashCache,
   WebGLTextureLoaderSyncHashCache,
 };
-
-export type { TextureAndSize };

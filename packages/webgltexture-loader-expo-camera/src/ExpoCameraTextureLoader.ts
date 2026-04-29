@@ -1,24 +1,16 @@
-import {
-  globalRegistry,
-  WebGLTextureLoaderAsyncHashCache,
-} from "webgltexture-loader";
-import { findNodeHandle } from "react-native";
-import { NativeModulesProxy } from "expo-modules-core";
 import { Camera } from "expo-camera";
+import { NativeModulesProxy } from "expo-modules-core";
+import { findNodeHandle } from "react-native";
+import { globalRegistry, WebGLTextureLoaderAsyncHashCache } from "webgltexture-loader";
 
 const neverEnding: Promise<never> = new Promise(() => {});
 
-const available = !!(
-  NativeModulesProxy.ExponentGLObjectManager &&
-  NativeModulesProxy.ExponentGLObjectManager.createCameraTextureAsync
-);
+const available = !!NativeModulesProxy.ExponentGLObjectManager?.createCameraTextureAsync;
 
 let warned = false;
 
 interface GLViewRefExtension {
-  createCameraTextureAsync(
-    camera: Camera
-  ): Promise<WebGLTexture & { exglObjId: number }>;
+  createCameraTextureAsync(camera: Camera): Promise<WebGLTexture & { exglObjId: number }>;
 }
 
 export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHashCache<Camera> {
@@ -32,7 +24,7 @@ export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHash
       if (!warned) {
         warned = true;
         console.log(
-          "webgltexture-loader-expo: ExponentGLObjectManager.createCameraTextureAsync is not available. Make sure to use the correct version of Expo"
+          "webgltexture-loader-expo: ExponentGLObjectManager.createCameraTextureAsync is not available. Make sure to use the correct version of Expo",
         );
       }
     }
@@ -42,9 +34,7 @@ export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHash
   override disposeTexture(texture: WebGLTexture): void {
     const exglObjId = this.objIds.get(texture);
     if (exglObjId !== undefined) {
-      NativeModulesProxy.ExponentGLObjectManager?.destroyObjectAsync?.(
-        exglObjId
-      );
+      NativeModulesProxy.ExponentGLObjectManager?.destroyObjectAsync?.(exglObjId);
     }
     this.objIds.delete(texture);
   }

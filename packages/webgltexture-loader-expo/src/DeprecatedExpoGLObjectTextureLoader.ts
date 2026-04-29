@@ -1,15 +1,9 @@
-import {
-  globalRegistry,
-  WebGLTextureLoaderAsyncHashCache,
-} from "webgltexture-loader";
 import { NativeModulesProxy } from "expo-modules-core";
+import { globalRegistry, WebGLTextureLoaderAsyncHashCache } from "webgltexture-loader";
 
 const neverEnding: Promise<never> = new Promise(() => {});
 
-const available = !!(
-  NativeModulesProxy.ExponentGLObjectManager &&
-  NativeModulesProxy.ExponentGLObjectManager.createObjectAsync
-);
+const available = !!NativeModulesProxy.ExponentGLObjectManager?.createObjectAsync;
 
 let warned = false;
 
@@ -24,7 +18,7 @@ export default class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHa
     if (!available && !warned) {
       warned = true;
       console.log(
-        "webgltexture-loader-expo: ExponentGLObjectManager.createObjectAsync is not available. Make sure to use the correct version of Expo"
+        "webgltexture-loader-expo: ExponentGLObjectManager.createObjectAsync is not available. Make sure to use the correct version of Expo",
       );
     }
     return available && typeof input === "object" && input !== null;
@@ -33,9 +27,7 @@ export default class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHa
   override disposeTexture(texture: WebGLTexture): void {
     const exglObjId = this.objIds.get(texture);
     if (exglObjId !== undefined) {
-      NativeModulesProxy.ExponentGLObjectManager?.destroyObjectAsync?.(
-        exglObjId
-      );
+      NativeModulesProxy.ExponentGLObjectManager?.destroyObjectAsync?.(exglObjId);
     }
     this.objIds.delete(texture);
   }
@@ -47,25 +39,35 @@ export default class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHa
   override loadNoCache(config: Record<string, unknown>) {
     const { gl } = this;
     const { __exglCtxId: exglCtxId } = gl as unknown as { __exglCtxId: number };
+    const createObjectAsync = NativeModulesProxy.ExponentGLObjectManager?.createObjectAsync;
+    if (!createObjectAsync) {
+      return {
+        promise: Promise.reject(
+          new Error("ExponentGLObjectManager.createObjectAsync not available"),
+        ),
+        dispose: () => {},
+      };
+    }
     let disposed = false;
     const dispose = () => {
       disposed = true;
     };
-    const promise =
-      NativeModulesProxy.ExponentGLObjectManager!.createObjectAsync!({
-        exglCtxId,
-        texture: config,
-      }).then(({ exglObjId }) => {
-        if (disposed) return neverEnding;
-        // Expo polyfills a constructible WebGLTexture(exglObjId) on the global.
-        // Standard browsers expose WebGLTexture as an opaque, non-constructible
-        // interface; this code only runs under Expo.
-        const texture = new (
-          globalThis as unknown as { WebGLTexture: new (id: number) => WebGLTexture }
-        ).WebGLTexture(exglObjId);
-        this.objIds.set(texture, exglObjId);
-        return { texture, width: 0, height: 0 };
-      });
+    const promise = createObjectAsync({
+      exglCtxId,
+      texture: config,
+    }).then(({ exglObjId }) => {
+      if (disposed) return neverEnding;
+      // Expo polyfills a constructible WebGLTexture(exglObjId) on the global.
+      // Standard browsers expose WebGLTexture as an opaque, non-constructible
+      // interface; this code only runs under Expo.
+      const texture = new (
+        globalThis as unknown as {
+          WebGLTexture: new (id: number) => WebGLTexture;
+        }
+      ).WebGLTexture(exglObjId);
+      this.objIds.set(texture, exglObjId);
+      return { texture, width: 0, height: 0 };
+    });
     return { promise, dispose };
   }
 }

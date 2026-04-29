@@ -2,24 +2,25 @@
   "name": "webgltexture-loader-expo",
   "version": "2.0.0",
   "description": "load basic expo 'config' object for webgltexture-loader",
-  "main": "lib/index.js",
+  "license": "MIT",
+  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
+  "repository": "https://github.com/gre/webgltexture-loader",
   "files": [
     "src",
     "lib"
   ],
-  "repository": "https://github.com/gre/webgltexture-loader",
-  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
-  "license": "MIT",
-  "peerDependencies": {
-    "expo-modules-core": "*",
-    "react-native": "*"
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "expo-asset-utils": "^3.0.0",
     "webgltexture-loader": "^2.0.0"
   },
-  "types": "lib/index.d.ts",
-  "scripts": {
-    "build": "tsc"
+  "peerDependencies": {
+    "expo-modules-core": "*",
+    "react-native": "*"
   }
 }

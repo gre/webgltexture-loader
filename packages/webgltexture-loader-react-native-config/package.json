@@ -2,19 +2,20 @@
   "name": "webgltexture-loader-react-native-config",
   "version": "2.0.0",
   "description": "load any react-native-webgl 'config' object for webgltexture-loader",
-  "main": "lib/ConfigTextureLoader.js",
+  "license": "MIT",
+  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
+  "repository": "https://github.com/gre/webgltexture-loader",
   "files": [
     "src",
     "lib"
   ],
-  "repository": "https://github.com/gre/webgltexture-loader",
-  "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
-  "license": "MIT",
-  "dependencies": {
-    "webgltexture-loader": "^2.0.0"
-  },
+  "main": "lib/ConfigTextureLoader.js",
   "types": "lib/ConfigTextureLoader.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "webgltexture-loader": "^2.0.0"
   }
 }
