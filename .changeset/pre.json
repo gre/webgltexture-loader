@@ -16,6 +16,7 @@
     "webgltexture-loader-react-native-imagesource": "2.0.0"
   },
   "changesets": [
+    "fix-cameraview-ref",
     "v2-1-0-alpha"
   ]
 }
