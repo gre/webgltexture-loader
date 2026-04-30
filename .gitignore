@@ -3,6 +3,7 @@ lib/
 coverage/
 .DS_Store
 packages/*/README.md
+apps/*/dist/
 
 # Yarn 4 (Berry) — keep releases/plugins/patches, ignore cache & state
 .yarn/*
