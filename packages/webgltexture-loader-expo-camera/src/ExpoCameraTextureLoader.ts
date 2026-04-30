@@ -29,12 +29,33 @@ interface ExpoGLObjectManager {
 }
 
 /**
- * The `GLViewRef` extension that expo-gl injects into the WebGL context.
- * Typed loosely because the runtime shape varies by SDK; we validate
- * `exglCtxId` is a number before using it.
+ * The `GLViewRef` extension that older expo-gl SDKs injected into the WebGL
+ * context. Typed loosely because the runtime shape varies by SDK; we validate
+ * `exglCtxId` is a number before using it. SDK 54 stops shipping the
+ * extension and exposes the same id as `gl.__exglCtxId` instead, so we try
+ * that property first and fall back to the extension.
  */
 interface GLViewRefExtension {
   exglCtxId?: unknown;
+}
+
+/**
+ * Resolve the EXGL context id across SDK versions:
+ *
+ *   - SDK 54+ exposes it as `gl.contextId` (the public field on
+ *     `ExpoWebGLRenderingContext`, see expo-gl's GLView.types).
+ *   - Some older internal builds put it on `gl.__exglCtxId`.
+ *   - Even older expo-gl injected a `GLViewRef` extension carrying the id.
+ *
+ * We try them in order and return null if none of them produce a number.
+ */
+function resolveExglCtxId(gl: WebGLRenderingContext): number | null {
+  const ctx = gl as unknown as { contextId?: unknown; __exglCtxId?: unknown };
+  if (typeof ctx.contextId === "number") return ctx.contextId;
+  if (typeof ctx.__exglCtxId === "number") return ctx.__exglCtxId;
+  const ext = gl.getExtension("GLViewRef") as unknown as GLViewRefExtension | null;
+  if (ext && typeof ext.exglCtxId === "number") return ext.exglCtxId;
+  return null;
 }
 
 /**
@@ -223,27 +244,15 @@ export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHash
       disposed = true;
     };
 
-    const glView = gl.getExtension("GLViewRef") as unknown as GLViewRefExtension | null;
-    if (!glView) {
+    const exglCtxId = resolveExglCtxId(gl);
+    if (exglCtxId === null) {
       return {
         promise: Promise.reject(
           new Error(
-            'webgltexture-loader-expo-camera: gl.getExtension("GLViewRef") returned null. ' +
-              "This loader only works inside an Expo GLView-provided WebGL context " +
-              "(see expo-gl's <GLView> component).",
-          ),
-        ),
-        dispose,
-      };
-    }
-    const exglCtxId = glView.exglCtxId;
-    if (typeof exglCtxId !== "number") {
-      return {
-        promise: Promise.reject(
-          new Error(
-            'webgltexture-loader-expo-camera: gl.getExtension("GLViewRef") did not ' +
-              "expose a numeric `exglCtxId`. expo-gl normally injects this id when " +
-              "the GL context is created inside a <GLView> component.",
+            "webgltexture-loader-expo-camera: could not resolve the EXGL context id. " +
+              'Tried `gl.contextId` (SDK 54+), `gl.__exglCtxId`, and `gl.getExtension("GLViewRef").exglCtxId` ' +
+              "(older SDKs); none exposed a numeric id. This loader only works inside " +
+              "an Expo GLView-provided WebGL context (see expo-gl's <GLView>).",
           ),
         ),
         dispose,

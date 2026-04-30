@@ -4,7 +4,7 @@
   "private": true,
   "description": "Manual smoke test for the Expo loaders (camera-texture path) on a real device via Expo Go.",
   "license": "MIT",
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

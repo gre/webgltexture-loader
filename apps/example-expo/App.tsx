@@ -10,11 +10,9 @@ import "webgltexture-loader-expo-camera";
 
 type Status = "idle" | "loading" | "ready" | "rendering" | "error";
 
-// Camera resolution we tell the loader. expo-camera doesn't surface the
-// actual sensor frame size synchronously, so we pick a sensible default
-// matching the typical `pictureSize` and let the GLView shader letterbox
-// via UV remapping (it doesn't actually need exact pixels — the shader
-// just samples 0..1).
+// Camera resolution reported back through the status bar. expo-camera
+// doesn't surface the actual sensor frame size synchronously, and the
+// shader just samples 0..1, so any sensible default works.
 const CAMERA_WIDTH = 720;
 const CAMERA_HEIGHT = 1280;
 
@@ -70,6 +68,8 @@ function linkProgram(gl: WebGLRenderingContext, vs: WebGLShader, fs: WebGLShader
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
+  const resolverRef = useRef<LoaderResolver | null>(null);
+  const rafRef = useRef<number | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -79,6 +79,17 @@ export default function App() {
       void requestPermission();
     }
   }, [permission, requestPermission]);
+
+  // Tear down RAF + GPU resources on unmount. The GLView destroys its EXGL
+  // context independently, but the loader holds an EXGL camera-texture id
+  // that we must free explicitly via `resolver.dispose()`.
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      resolverRef.current?.dispose();
+      resolverRef.current = null;
+    };
+  }, []);
 
   if (!permission) {
     return (
@@ -100,7 +111,6 @@ export default function App() {
   }
 
   const onContextCreate = async (gl: ExpoWebGLRenderingContext) => {
-    let rafId: number | null = null;
     try {
       const cam = cameraRef.current;
       if (!cam) {
@@ -111,6 +121,7 @@ export default function App() {
 
       setStatus("loading");
       const resolver = new LoaderResolver(gl);
+      resolverRef.current = resolver;
       // Pass the explicit `{ camera, width, height }` form: per the loader's
       // own warning, the bare ref returns 0/0 dimensions and the cache then
       // sticks at 0/0 even after a re-load.
@@ -157,29 +168,24 @@ export default function App() {
 
       setStatus("rendering");
       const draw = () => {
-        // For live sources the loader contract requires us to call
-        // `update()` every frame so the texture re-syncs with the latest
-        // camera frame.
+        // The loader contract requires `update()` per frame for live
+        // sources so the texture re-syncs with the latest camera frame.
         loader.update(input);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         gl.endFrameEXP();
-        rafId = requestAnimationFrame(draw);
+        rafRef.current = requestAnimationFrame(draw);
       };
       draw();
     } catch (e) {
-      if (rafId !== null) cancelAnimationFrame(rafId);
       setStatus("error");
       setErrorMsg(e instanceof Error ? e.message : String(e));
     }
   };
 
-  // Layering: CameraView sits behind a fullscreen GLView (which is opaque
-  // once the shader runs and `gl.clearColor` fills the background). The
-  // CameraView is sized to fill so the native camera session is configured
-  // with a real preview size, but visually it's fully covered by the
-  // GLView output — that's the actual demo: the inverted grayscale frames
-  // come from the loader, not the raw preview.
+  // CameraView fills the screen so the native camera session has a real
+  // preview size, then the GLView fully covers it — the visible output
+  // (inverted grayscale) comes from the loader, not the raw preview.
   return (
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="front" />
