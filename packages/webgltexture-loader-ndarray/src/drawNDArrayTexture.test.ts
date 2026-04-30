@@ -44,7 +44,7 @@ function makeMockWebGL2(): {
     RGBA16UI: 0x8d76,
     R16I: 0x8233,
     RG16I: 0x8239,
-    RGB16I: 0x8d8f,
+    RGB16I: 0x8d89,
     RGBA16I: 0x8d88,
     R32UI: 0x8236,
     RG32UI: 0x823c,
