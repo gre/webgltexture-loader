@@ -1,5 +1,6 @@
 module.exports = {
-  testPathIgnorePatterns: ["/node_modules/", "/lib/"],
+  testPathIgnorePatterns: ["/node_modules/", "/lib/", "/\\.claude/"],
+  modulePathIgnorePatterns: ["<rootDir>/\\.claude/"],
   // NodeNext requires explicit `.js` extensions in TS source. Strip them at
   // resolution time so Jest finds the actual `.ts` file.
   moduleNameMapper: {
