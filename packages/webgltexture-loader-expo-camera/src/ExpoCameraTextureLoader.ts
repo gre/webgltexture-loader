@@ -3,7 +3,7 @@
 // `Camera`. Reading off the namespace lets the runtime guard (`typeof
 // LegacyCamera === "function"`) actually do its job.
 import * as ExpoCameraModule from "expo-camera";
-import { NativeModulesProxy } from "expo-modules-core";
+import { requireNativeModule } from "expo-modules-core";
 import { globalRegistry, WebGLTextureLoaderAsyncHashCache } from "webgltexture-loader";
 
 const LegacyCamera: unknown = (ExpoCameraModule as { Camera?: unknown }).Camera;
@@ -12,16 +12,48 @@ const CameraView: unknown = (ExpoCameraModule as { CameraView?: unknown }).Camer
 const neverEnding: Promise<never> = new Promise(() => {});
 
 /**
- * A "camera ref" is anything that looks like a native ref Expo can attach
- * a GL camera texture to. We accept several shapes because Expo's API has
- * shifted across SDKs:
+ * Native `ExponentGLObjectManager` module exposed by `expo-gl`. We resolve
+ * it via `requireNativeModule` rather than `NativeModulesProxy` because on
+ * Expo SDK 54+ (Expo Go / Android) `NativeModulesProxy.ExponentGLObjectManager`
+ * is `undefined` even when the module is actually installed and working.
  *
- * - `_nativeTag` — RN class component / ref-forwarded class (legacy `Camera`).
- * - `__internalInstanceHandle` — RN New Architecture (Fabric) ref.
- * - `getNativeRef()` — `CameraView`'s pattern in some SDKs.
- * - `instanceof CameraView` — modern (SDK 51+) class component instance.
- *   Its real native ref is at `instance._cameraRef.current`; we unwrap to
- *   that before calling Expo's GL bridge (see `unwrapNativeCameraRef`).
+ * We also can't go through the `glView.createCameraTextureAsync` extension
+ * method: in the same env it captures an `ExponentGLObjectManager` reference
+ * that is `undefined` at closure time (TDZ / load-order issue inside expo-gl),
+ * so calling it throws "Cannot read property 'createCameraTextureAsync' of
+ * undefined". Calling the native module directly sidesteps both bugs.
+ */
+interface ExpoGLObjectManager {
+  createCameraTextureAsync(exglCtxId: number, cameraTag: number): Promise<{ exglObjId: number }>;
+  destroyObjectAsync(exglObjId: number): Promise<void>;
+}
+
+/**
+ * The `GLViewRef` extension that expo-gl injects into the WebGL context.
+ * Typed loosely because the runtime shape varies by SDK; we validate
+ * `exglCtxId` is a number before using it.
+ */
+interface GLViewRefExtension {
+  exglCtxId?: unknown;
+}
+
+/**
+ * A "camera ref" is anything we recognise as a candidate native ref. The
+ * shape varies across Expo SDKs:
+ *
+ * - `nativeTag` / `_nativeTag`: numeric RN host-component native tag (no
+ *   underscore on SDK 54+, with underscore on legacy refs). This is the
+ *   field `loadNoCache` actually feeds to `createCameraTextureAsync`.
+ * - `getNativeRef()`: some SDKs hide the host ref behind a method;
+ *   `resolveCameraTag` calls it and reads `nativeTag` / `_nativeTag` off
+ *   the result.
+ * - `__internalInstanceHandle`: marker present on RN New Architecture
+ *   (Fabric) refs. We recognise it for identity / canLoad purposes but a
+ *   numeric tag may not be reachable without RN internals; in that case
+ *   `loadNoCache` rejects with a clear "no native tag" error.
+ * - `instanceof CameraView`: modern (SDK 51+) class component instance.
+ *   Its real native ref lives at `instance._cameraRef.current`; we unwrap
+ *   to that before resolving the tag (see `unwrapNativeCameraRef`).
  *
  * As a back-compat fallback we also accept anything that is `instanceof`
  * the legacy `Camera` class. Both class references are read off the
@@ -30,6 +62,7 @@ const neverEnding: Promise<never> = new Promise(() => {});
  * crash at module load.
  */
 type LegacyCameraOrCameraViewRef = {
+  nativeTag?: unknown;
   _nativeTag?: unknown;
   __internalInstanceHandle?: unknown;
   getNativeRef?: () => unknown;
@@ -44,16 +77,11 @@ type CameraInputObject = {
 
 export type CameraInput = LegacyCameraOrCameraViewRef | CameraInputObject;
 
-interface GLViewRefExtension {
-  createCameraTextureAsync(
-    camera: LegacyCameraOrCameraViewRef,
-  ): Promise<WebGLTexture & { exglObjId: number }>;
-}
-
 /** Duck-type check: does `value` look like a native camera ref? */
 function isCameraRef(value: unknown): value is LegacyCameraOrCameraViewRef {
   if (!value || typeof value !== "object") return false;
   const obj = value as Record<string, unknown>;
+  if ("nativeTag" in obj) return true;
   if ("_nativeTag" in obj) return true;
   if ("__internalInstanceHandle" in obj) return true;
   if (typeof obj.getNativeRef === "function") return true;
@@ -70,8 +98,8 @@ function isCameraRef(value: unknown): value is LegacyCameraOrCameraViewRef {
  * `CameraView` (SDK 51+) is a React class wrapper, not a native handle. The
  * real ref lives at `instance._cameraRef.current` (see expo-camera's
  * `CameraView.js`, which declares `_cameraRef = createRef()` and renders
- * `<ExpoCamera ... ref={this._cameraRef}>`). Unwrap so both the GL bridge
- * call AND the `inputHash` WeakMap key on the same identity — otherwise
+ * `<ExpoCamera ... ref={this._cameraRef}>`). Unwrap so both the native-tag
+ * lookup AND the `inputHash` WeakMap key on the same identity, otherwise
  * dispose / cache invariants get desynced.
  */
 function unwrapNativeCameraRef(input: LegacyCameraOrCameraViewRef): LegacyCameraOrCameraViewRef {
@@ -82,6 +110,41 @@ function unwrapNativeCameraRef(input: LegacyCameraOrCameraViewRef): LegacyCamera
     }
   }
   return input;
+}
+
+/**
+ * Extract the React Native host-component tag from a camera ref. SDK 54+
+ * exposes it as `nativeTag` (no underscore); older SDKs use `_nativeTag`.
+ * Some SDKs put the real ref behind a `getNativeRef()` method, so try that
+ * too. Returns `null` when no numeric tag is reachable so callers can
+ * produce a clear error.
+ */
+function resolveCameraTag(ref: LegacyCameraOrCameraViewRef): number | null {
+  if (typeof ref.nativeTag === "number") return ref.nativeTag;
+  if (typeof ref._nativeTag === "number") return ref._nativeTag;
+  if (typeof ref.getNativeRef === "function") {
+    const inner = ref.getNativeRef() as { nativeTag?: unknown; _nativeTag?: unknown } | null;
+    if (inner) {
+      if (typeof inner.nativeTag === "number") return inner.nativeTag;
+      if (typeof inner._nativeTag === "number") return inner._nativeTag;
+    }
+  }
+  return null;
+}
+
+/**
+ * Best-effort destroy of a native EXGL object. The native module may be
+ * unavailable (sync throw from `requireNativeModule`) and `destroyObjectAsync`
+ * itself may reject; either failure is swallowed because dispose has no
+ * recourse and the JS-side texture is already going away.
+ */
+function destroyEXGLObject(exglObjId: number): void {
+  try {
+    const manager = requireNativeModule<ExpoGLObjectManager>("ExponentGLObjectManager");
+    void manager.destroyObjectAsync(exglObjId).catch(() => {});
+  } catch {
+    // swallow: native module missing in this environment.
+  }
 }
 
 /** Duck-type check: does `value` look like the `{ camera, width, height }` wrapper? */
@@ -115,7 +178,7 @@ export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHash
   override disposeTexture(texture: WebGLTexture): void {
     const exglObjId = this.objIds.get(texture);
     if (exglObjId !== undefined) {
-      NativeModulesProxy.ExponentGLObjectManager?.destroyObjectAsync?.(exglObjId);
+      destroyEXGLObject(exglObjId);
     }
     this.objIds.delete(texture);
   }
@@ -159,24 +222,102 @@ export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHash
     const dispose = () => {
       disposed = true;
     };
+
     const glView = gl.getExtension("GLViewRef") as unknown as GLViewRefExtension | null;
-    const promise = !glView
-      ? Promise.reject(
+    if (!glView) {
+      return {
+        promise: Promise.reject(
           new Error(
             'webgltexture-loader-expo-camera: gl.getExtension("GLViewRef") returned null. ' +
               "This loader only works inside an Expo GLView-provided WebGL context " +
               "(see expo-gl's <GLView> component).",
           ),
-        )
-      : glView.createCameraTextureAsync(camera).then((texture) => {
-          if (disposed) return neverEnding;
-          this.objIds.set(texture, texture.exglObjId);
-          return {
-            texture,
-            width: explicit ? explicit.width : 0,
-            height: explicit ? explicit.height : 0,
-          };
-        });
+        ),
+        dispose,
+      };
+    }
+    const exglCtxId = glView.exglCtxId;
+    if (typeof exglCtxId !== "number") {
+      return {
+        promise: Promise.reject(
+          new Error(
+            'webgltexture-loader-expo-camera: gl.getExtension("GLViewRef") did not ' +
+              "expose a numeric `exglCtxId`. expo-gl normally injects this id when " +
+              "the GL context is created inside a <GLView> component.",
+          ),
+        ),
+        dispose,
+      };
+    }
+
+    const cameraTag = resolveCameraTag(camera);
+    if (cameraTag === null) {
+      return {
+        promise: Promise.reject(
+          new Error(
+            "webgltexture-loader-expo-camera: could not resolve a numeric React Native " +
+              "tag from the camera ref (looked for `nativeTag` / `_nativeTag`). " +
+              "Make sure you pass the camera ref produced by `<CameraView ref={...} />` " +
+              "(or the legacy `<Camera ref={...} />`) once it has mounted.",
+          ),
+        ),
+        dispose,
+      };
+    }
+
+    // SDK 54's `globalThis.WebGLTexture(arg)` constructor IGNORES its
+    // argument, so we build the wrapper and assign `.id` manually. We still
+    // need `new WebGLTexture()` because `gl.bindTexture` does an `instanceof
+    // WebGLTexture` check at the native bridge. Resolve the constructor up
+    // front so a missing global rejects synchronously without spending a
+    // native-module round-trip we can't use.
+    const WebGLTextureCtor = (globalThis as { WebGLTexture?: new () => WebGLTexture }).WebGLTexture;
+    if (typeof WebGLTextureCtor !== "function") {
+      return {
+        promise: Promise.reject(
+          new Error(
+            "webgltexture-loader-expo-camera: globalThis.WebGLTexture is not a constructor. " +
+              "Expo's GLView runtime should provide it inside the GL context's worklet.",
+          ),
+        ),
+        dispose,
+      };
+    }
+
+    let manager: ExpoGLObjectManager;
+    try {
+      manager = requireNativeModule<ExpoGLObjectManager>("ExponentGLObjectManager");
+    } catch (err) {
+      return {
+        promise: Promise.reject(
+          new Error(
+            "webgltexture-loader-expo-camera: failed to resolve the native " +
+              "ExponentGLObjectManager module via requireNativeModule. " +
+              "Make sure expo-gl is installed and linked in this runtime. " +
+              `(underlying error: ${(err as Error)?.message ?? String(err)})`,
+          ),
+        ),
+        dispose,
+      };
+    }
+
+    const promise = manager.createCameraTextureAsync(exglCtxId, cameraTag).then(({ exglObjId }) => {
+      if (disposed) {
+        // The caller cancelled before we got the EXGL id; the native object
+        // exists but has no JS-side handle, so destroy it now (best-effort)
+        // to avoid leaking GPU memory.
+        destroyEXGLObject(exglObjId);
+        return neverEnding;
+      }
+      const texture = new WebGLTextureCtor() as WebGLTexture & { id?: number };
+      texture.id = exglObjId;
+      this.objIds.set(texture, exglObjId);
+      return {
+        texture,
+        width: explicit ? explicit.width : 0,
+        height: explicit ? explicit.height : 0,
+      };
+    });
     return { promise, dispose };
   }
 
