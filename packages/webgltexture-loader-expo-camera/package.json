@@ -20,7 +20,6 @@
   },
   "peerDependencies": {
     "expo-camera": "*",
-    "expo-modules-core": "*",
-    "react-native": "*"
+    "expo-modules-core": "*"
   }
 }

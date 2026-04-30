@@ -5717,7 +5717,6 @@ __metadata:
   peerDependencies:
     expo-camera: "*"
     expo-modules-core: "*"
-    react-native: "*"
   languageName: unknown
   linkType: soft
 
