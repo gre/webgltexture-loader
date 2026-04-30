@@ -5,12 +5,31 @@ import "webgltexture-loader-ndarray";
 import { LoaderResolver, type WebGLTextureLoader } from "webgltexture-loader";
 import type { NdArray } from "ndarray";
 
-import { createFullscreenQuad, createProgram, FRAG_SRC, getGL, VERT_SRC } from "./gl.js";
-import { makeCanvasSource, makeImageURL, makeNdArray, makeVideo } from "./sources.js";
+import {
+  createFullscreenQuad,
+  createProgram,
+  FRAG_SRC_GL1,
+  FRAG_SRC_GL2,
+  getGL,
+  VERT_SRC_GL1,
+  VERT_SRC_GL2,
+} from "./gl.js";
+import {
+  makeCanvasSource,
+  makeImageURL,
+  makeNdArray,
+  makeUint16Gradient,
+  makeVideo,
+} from "./sources.js";
 
 type Status = "loading" | "loaded" | "failed" | "disposed";
 
-type SourceInput = HTMLCanvasElement | HTMLVideoElement | string | NdArray<Uint8Array>;
+type SourceInput =
+  | HTMLCanvasElement
+  | HTMLVideoElement
+  | string
+  | NdArray<Uint8Array>
+  | NdArray<Uint16Array>;
 
 interface Source {
   readonly name: string;
@@ -20,6 +39,13 @@ interface Source {
   readonly textureUnit: number;
   /** Whether this source mutates over time and needs `update()` every frame. */
   readonly live: boolean;
+  /**
+   * Whether the underlying texture is a WebGL2 integer texture (uint16 etc.).
+   * Such textures must use NEAREST filtering — most GPUs reject LINEAR for
+   * integer internalformats, and the bound `usampler2D` returns `uvec4` so
+   * filtering would have nothing meaningful to interpolate.
+   */
+  readonly integerTexture?: boolean;
   /**
    * Optional promise that rejects to signal the input cannot become ready
    * (e.g. video errored or timed out). Raced against `loader.load()` so the
@@ -53,12 +79,27 @@ function need<T extends HTMLElement>(id: string): T {
 const canvasEl = need<HTMLCanvasElement>("gl");
 const sourcesEl = need<HTMLUListElement>("sources");
 const disposeBtn = need<HTMLButtonElement>("dispose");
+const glVersionEl = need<HTMLSpanElement>("gl-version");
+const noteEl = need<HTMLParagraphElement>("note");
 
-const gl = getGL(canvasEl);
+const { gl, isWebGL2 } = getGL(canvasEl);
+glVersionEl.textContent = isWebGL2 ? "WebGL2" : "WebGL1";
+glVersionEl.className = isWebGL2 ? "pill ok" : "pill warn";
+noteEl.textContent = isWebGL2
+  ? "Bottom row: same gradient rendered as Uint8 (left) vs Uint16 (mid). The dark end of Uint8 shows visible banding because the gamma ramp under-utilises the 8-bit code space."
+  : "WebGL2 unavailable: showing the 2x2 fallback grid. The Uint16 ndarray cell needs WebGL2 integer textures.";
+// Match canvas aspect to the grid so each cell stays square: 3:2 for
+// WebGL2's 3x2 layout, 1:1 for the WebGL1 2x2 fallback.
+document.documentElement.style.setProperty("--aspect", isWebGL2 ? "1.5" : "1");
 const resolver = new LoaderResolver(gl);
 
 const { video, failed: videoFailed, cancelTimeout: cancelVideoTimeout } = makeVideo(VIDEO_URL);
+const { uint16: ndUint16, uint8: ndUint16AsUint8 } = makeUint16Gradient();
 
+// Texture units are assigned by demo-grid position so the uniform map below is
+// stable across the WebGL1 / WebGL2 layouts. The WebGL2 fragment shader
+// references `u_uint16` (a usampler2D); on WebGL1 we render only the 2x2
+// subset (canvas/image/video/ndarray-uint8) and skip the integer cell.
 const sources: Source[] = [
   {
     name: "HTMLCanvasElement",
@@ -72,7 +113,7 @@ const sources: Source[] = [
   },
   {
     name: "Image URL (data:)",
-    position: "top-right",
+    position: isWebGL2 ? "top-mid" : "top-right",
     uniform: "u_image",
     input: makeImageURL(),
     textureUnit: 1,
@@ -82,7 +123,7 @@ const sources: Source[] = [
   },
   {
     name: "HTMLVideoElement",
-    position: "bottom-left",
+    position: isWebGL2 ? "top-right" : "bottom-left",
     uniform: "u_video",
     input: video,
     textureUnit: 2,
@@ -93,10 +134,16 @@ const sources: Source[] = [
     status: "loading",
   },
   {
-    name: "ndarray (RGBA Uint8)",
-    position: "bottom-right",
-    uniform: "u_ndarray",
-    input: makeNdArray(),
+    name: isWebGL2 ? "ndarray (RGBA Uint8, downcast from Uint16)" : "ndarray (RGBA Uint8, plasma)",
+    position: isWebGL2 ? "bottom-left" : "bottom-right",
+    // Slot maps to `u_ndarray` on WebGL1 (existing 2x2 grid) and `u_uint8`
+    // on WebGL2 (precision-comparison cell). The fragment shader picks the
+    // matching uniform name; the unused name simply doesn't get a location.
+    uniform: isWebGL2 ? "u_uint8" : "u_ndarray",
+    // On WebGL2 use the uint8-downcast of the gradient so the bottom row
+    // pairs with the uint16 cell for a direct precision comparison; on
+    // WebGL1 keep the legacy plasma since there's nothing to compare to.
+    input: isWebGL2 ? ndUint16AsUint8 : makeNdArray(),
     textureUnit: 3,
     live: false,
     paramsSet: false,
@@ -104,7 +151,25 @@ const sources: Source[] = [
   },
 ];
 
-const program = createProgram(gl, VERT_SRC, FRAG_SRC);
+if (isWebGL2) {
+  sources.push({
+    name: "ndarray (RGBA Uint16, integer texture)",
+    position: "bottom-mid",
+    uniform: "u_uint16",
+    input: ndUint16,
+    textureUnit: 4,
+    live: false,
+    integerTexture: true,
+    paramsSet: false,
+    status: "loading",
+  });
+}
+
+const program = createProgram(
+  gl,
+  isWebGL2 ? VERT_SRC_GL2 : VERT_SRC_GL1,
+  isWebGL2 ? FRAG_SRC_GL2 : FRAG_SRC_GL1,
+);
 gl.useProgram(program);
 createFullscreenQuad(gl, gl.getAttribLocation(program, "a_position"));
 for (const s of sources) {
@@ -163,8 +228,11 @@ function bindAndUpdate(s: Source): boolean {
   // uploaded once by the loader's first `get()` call.
   if (s.live) s.loader.update(s.input);
   if (!s.paramsSet) {
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    // Integer textures (e.g. RGBA16UI) reject LINEAR filtering on every
+    // mainstream WebGL2 implementation; force NEAREST for that path.
+    const filter = s.integerTexture ? gl.NEAREST : gl.LINEAR;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     s.paramsSet = true;

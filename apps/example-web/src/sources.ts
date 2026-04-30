@@ -148,3 +148,47 @@ export function makeNdArray(): NdArray<Uint8Array> {
   }
   return ndarray(data, [size, size, 4]);
 }
+
+/**
+ * Build a 256x256 RGBA gradient using the full uint16 range with a steep gamma
+ * curve, so the precision difference between uint16 and uint8 is visible at
+ * the dark end (subtle banding when the same data is downcast to 8-bit).
+ *
+ * Returns both the uint16 source and an 8-bit copy (`value >> 8`) of the same
+ * gradient for side-by-side comparison.
+ */
+export function makeUint16Gradient(): {
+  uint16: NdArray<Uint16Array>;
+  uint8: NdArray<Uint8Array>;
+} {
+  const size = 256;
+  const u16 = new Uint16Array(size * size * 4);
+  const u8 = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      // Horizontal gamma ramp on R/G/B; the dark end stretches over many
+      // 16-bit codes that all collapse to 0..a few in 8-bit, producing
+      // visible banding in the uint8 quadrant.
+      const t = x / (size - 1);
+      const ramp = Math.round(Math.pow(t, 2.2) * 65535);
+      // Vertical secondary modulation so each channel differs slightly,
+      // making the comparison visually distinct from pure greyscale.
+      const m = Math.round((y / (size - 1)) * 65535);
+      const i = (y * size + x) * 4;
+      u16[i] = ramp;
+      u16[i + 1] = (ramp + m) >>> 1;
+      u16[i + 2] = m;
+      u16[i + 3] = 65535;
+      // High-byte truncation matches what uint16 -> uint8 normalization
+      // would produce after dividing by 65535 and re-quantizing to 255.
+      u8[i] = u16[i]! >> 8;
+      u8[i + 1] = u16[i + 1]! >> 8;
+      u8[i + 2] = u16[i + 2]! >> 8;
+      u8[i + 3] = 255;
+    }
+  }
+  return {
+    uint16: ndarray(u16, [size, size, 4]),
+    uint8: ndarray(u8, [size, size, 4]),
+  };
+}

@@ -37,9 +37,15 @@
         background: #000;
         overflow: hidden;
       }
+      /* Default to a square (matches the WebGL1 2x2 fallback grid). The
+         WebGL2 path uses a 3x2 grid and updates `--aspect` from JS so each
+         cell stays square. */
+      :root { --aspect: 1; }
       #gl {
-        width: min(100%, calc(100vh * 1));
-        height: 100%;
+        width: min(100%, calc(100vh * var(--aspect)));
+        height: min(100%, calc(100vw / var(--aspect)));
+        max-width: 100%;
+        max-height: 100%;
         display: block;
       }
       .sidebar {
@@ -114,6 +120,28 @@
       button:hover { background: #353c4a; }
       button:disabled { opacity: 0.5; cursor: not-allowed; }
       a { color: #7ab7ff; }
+      .pill {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+      }
+      .pill.ok { background: #1c3a23; border-color: #2c5b39; color: #b5e2c0; }
+      .pill.warn { background: #3a2f1c; border-color: #5b4a2c; color: #e2d3b5; }
+      .note {
+        margin-top: 12px;
+        padding: 8px 10px;
+        background: #11151c;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
     </style>
   </head>
   <body>
@@ -123,8 +151,12 @@
       </div>
       <aside class="sidebar">
         <h1>webgltexture-loader demo</h1>
-        <div class="muted">Each quadrant samples a different loader.</div>
+        <div class="muted">
+          Each cell samples a different loader.
+          Context: <span id="gl-version" class="pill">…</span>
+        </div>
         <ul id="sources" class="sources"></ul>
+        <p id="note" class="note"></p>
         <button id="dispose">Dispose all</button>
         <p class="muted" style="margin-top:16px">
           Source: <a href="https://github.com/gre/webgltexture-loader">gre/webgltexture-loader</a>
