@@ -17,15 +17,30 @@ declare `main: lib/index.js`, and `lib/` is only produced by their build.
 
 ## What it shows
 
-A WebGL canvas split into a 2x2 grid, each quadrant sampling a different
-loader:
+The demo requests a **WebGL2** context first and falls back to WebGL1 if the
+browser doesn't have one (the sidebar pill makes the choice visible).
 
-| Quadrant     | Loader                       | Source                                   |
-| ------------ | ---------------------------- | ---------------------------------------- |
-| top-left     | `CanvasTextureLoader`        | A programmatic `HTMLCanvasElement` (gradient + circle + label). |
-| top-right    | `ImageURLTextureLoader`      | A `data:image/png` URL generated at runtime (offline-friendly). |
-| bottom-left  | `VideoTextureLoader`         | A CC0 webm streamed from MDN's media bucket (`Access-Control-Allow-Origin: *`, required for `crossOrigin="anonymous"`). |
-| bottom-right | `NDArrayTextureLoader`       | A 64x64 RGBA `Uint8Array` plasma pattern wrapped with `ndarray`. |
+### WebGL2 (3x2 grid, default)
+
+| Cell        | Loader                  | Source                                                                                                  |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| top-left    | `CanvasTextureLoader`   | A programmatic `HTMLCanvasElement` (gradient + circle + label).                                         |
+| top-mid     | `ImageURLTextureLoader` | A `data:image/png` URL generated at runtime (offline-friendly).                                         |
+| top-right   | `VideoTextureLoader`    | A CC0 webm from MDN's media bucket.                                                                     |
+| bottom-left | `NDArrayTextureLoader`  | A 256x256 RGBA gamma-ramp gradient downcast from Uint16 (`v >> 8`) — same pixels as the cell to its right but uploaded as `uint8`. |
+| bottom-mid  | `NDArrayTextureLoader`  | The same 256x256 gradient as a `Uint16Array` ndarray, uploaded via the WebGL2 integer-texture path (`RGBA16UI`) and sampled through a `usampler2D` divided by `65535.0`. |
+| bottom-right| —                       | Flat info panel (no texture).                                                                           |
+
+The bottom row is the precision comparison: a steep gamma ramp is laid out so
+the dark end stretches over many 16-bit codes that all collapse to a few 8-bit
+codes — the uint8 cell shows visible banding at the dark end while the uint16
+cell stays smooth.
+
+### WebGL1 fallback (2x2 grid)
+
+WebGL1 has no integer textures. The demo falls back to the original 2x2 grid
+(canvas + image + video + a 64x64 plasma `Uint8` ndarray) and the sidebar pill
+flips to a yellow `WebGL1` indicator.
 
 The sidebar shows each source's resolved size, the loader class that handled
 it, and a status indicator. The "Dispose all" button calls `resolver.dispose()`

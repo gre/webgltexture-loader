@@ -42,6 +42,15 @@ interface IntegerDtypeEntry {
   typeName: string;
 }
 
+// Per-channel-count `format` constants for integer textures (1..4 channels).
+// Hoisted to module scope so we don't reallocate this array on every draw.
+const INTEGER_FORMAT_NAMES: readonly [string, string, string, string] = [
+  "RED_INTEGER",
+  "RG_INTEGER",
+  "RGB_INTEGER",
+  "RGBA_INTEGER",
+];
+
 const INTEGER_DTYPE_TABLE: Record<IntegerDtypeKind, IntegerDtypeEntry> = {
   uint16: {
     internalformatNames: ["R16UI", "RG16UI", "RGB16UI", "RGBA16UI"],
@@ -166,8 +175,7 @@ export default function drawNDArrayTexture(
       if (channelIndex < 0 || channelIndex > 3) {
         throw new Error("webgltexture-loader-ndarray: Invalid shape for pixel coords");
       }
-      const integerFormatNames = ["RED_INTEGER", "RG_INTEGER", "RGB_INTEGER", "RGBA_INTEGER"];
-      format = gl2Const(gl, integerFormatNames[channelIndex]);
+      format = gl2Const(gl, INTEGER_FORMAT_NAMES[channelIndex]);
       internalformat = gl2Const(
         gl,
         INTEGER_DTYPE_TABLE[integerKind].internalformatNames[channelIndex],
