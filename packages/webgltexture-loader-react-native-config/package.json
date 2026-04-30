@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-react-native-config",
-  "version": "2.0.0",
+  "version": "2.1.0-alpha.0",
   "description": "load any react-native-webgl 'config' object for webgltexture-loader",
   "license": "MIT",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
@@ -16,6 +16,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "webgltexture-loader": "^2.0.0"
+    "webgltexture-loader": "^2.1.0-alpha.0"
   }
 }

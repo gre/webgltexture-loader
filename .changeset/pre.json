@@ -1,0 +1,21 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "example-web": "0.0.0",
+    "webgltexture-loader": "2.0.0",
+    "webgltexture-loader-dom": "2.0.0",
+    "webgltexture-loader-dom-canvas": "2.0.0",
+    "webgltexture-loader-dom-image-url": "2.0.0",
+    "webgltexture-loader-dom-video": "2.0.0",
+    "webgltexture-loader-expo": "2.0.0",
+    "webgltexture-loader-expo-camera": "2.0.0",
+    "webgltexture-loader-ndarray": "2.0.0",
+    "webgltexture-loader-react-native": "2.0.0",
+    "webgltexture-loader-react-native-config": "2.0.0",
+    "webgltexture-loader-react-native-imagesource": "2.0.0"
+  },
+  "changesets": [
+    "v2-1-0-alpha"
+  ]
+}

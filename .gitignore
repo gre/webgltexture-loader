@@ -13,3 +13,4 @@ apps/*/dist/
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+.claude/worktrees/

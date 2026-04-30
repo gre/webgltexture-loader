@@ -1,6 +1,6 @@
 {
   "name": "example-web",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.0",
   "private": true,
   "description": "Visual smoke test for every web-side webgltexture-loader (canvas, image URL, video, ndarray).",
   "license": "MIT",

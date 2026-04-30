@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-dom",
-  "version": "2.0.0",
+  "version": "2.1.0-alpha.0",
   "description": "collection of webgltexture-loader in DOM implementation context",
   "license": "MIT",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
@@ -16,8 +16,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "webgltexture-loader-dom-canvas": "^2.0.0",
-    "webgltexture-loader-dom-image-url": "^2.0.0",
-    "webgltexture-loader-dom-video": "^2.0.0"
+    "webgltexture-loader-dom-canvas": "^2.1.0-alpha.0",
+    "webgltexture-loader-dom-image-url": "^2.1.0-alpha.0",
+    "webgltexture-loader-dom-video": "^2.1.0-alpha.0"
   }
 }
