@@ -58,10 +58,35 @@ const installCoreMock = (impl: CoreMock["NativeModulesProxy"]) => {
   jest.doMock("expo-modules-core", () => ({ NativeModulesProxy: impl }), { virtual: true });
 };
 
+// `DeprecatedExpoGLObjectTextureLoader.ts` calls `globalRegistry.add(class)`
+// at module import time. The registry is a singleton on `globalThis`, so
+// every fresh `require(...)` inside `jest.isolateModules` would otherwise
+// permanently append another copy of the loader class to the registry —
+// leaking across tests (and files) and potentially changing resolver
+// order elsewhere. We use `jest.isolateModules` to also re-require
+// `webgltexture-loader` inside the same isolated module graph and stub
+// `globalRegistry.add` to a no-op so the registration is suppressed.
+//
+// (Re-importing `webgltexture-loader` does NOT re-construct a registry:
+// `globalRegistry.ts` keys it on `globalThis.__webglTextureLoader_registry`
+// and the loader uses that same singleton — we just intercept the
+// `add()` call from the freshly-required loader's perspective.)
 const requireLoaderFresh = (impl: CoreMock["NativeModulesProxy"]): { Loader: Loader } => {
   let Loader!: Loader;
   jest.isolateModules(() => {
     installCoreMock(impl);
+    jest.doMock("webgltexture-loader", () => {
+      const actual =
+        jest.requireActual<typeof import("webgltexture-loader")>("webgltexture-loader");
+      return {
+        ...actual,
+        globalRegistry: {
+          add: () => {},
+          remove: () => {},
+          get: () => actual.globalRegistry.get(),
+        },
+      };
+    });
     Loader = require("./DeprecatedExpoGLObjectTextureLoader.js").default;
   });
   return { Loader };
@@ -69,7 +94,29 @@ const requireLoaderFresh = (impl: CoreMock["NativeModulesProxy"]): { Loader: Loa
 
 afterEach(() => {
   jest.dontMock("expo-modules-core");
+  jest.dontMock("webgltexture-loader");
   jest.resetModules();
+});
+
+import { globalRegistry } from "webgltexture-loader";
+
+test("requireLoaderFresh does NOT leak loader classes into the global registry", () => {
+  const before = globalRegistry.get().length;
+  requireLoaderFresh({
+    ExponentGLObjectManager: {
+      createObjectAsync: jest.fn(),
+      destroyObjectAsync: jest.fn(),
+    },
+  });
+  requireLoaderFresh({
+    ExponentGLObjectManager: {
+      createObjectAsync: jest.fn(),
+      destroyObjectAsync: jest.fn(),
+    },
+  });
+  // Without the doMock'd no-op add(), each fresh require would append
+  // another class. With the mock, the count must be unchanged.
+  expect(globalRegistry.get().length).toBe(before);
 });
 
 test("canLoad returns true for an object input when createObjectAsync is available", () => {
