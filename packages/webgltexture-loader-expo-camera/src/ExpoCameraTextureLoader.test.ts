@@ -17,12 +17,37 @@ jest.mock(
 jest.mock(
   "expo-modules-core",
   () => ({
-    NativeModulesProxy: {},
+    requireNativeModule: jest.fn(),
   }),
   { virtual: true },
 );
 
 import ExpoCameraTextureLoader from "./ExpoCameraTextureLoader.js";
+
+const ExpoModulesCoreMock = jest.requireMock<{
+  requireNativeModule: jest.Mock;
+}>("expo-modules-core");
+
+/**
+ * Configure `requireNativeModule("ExponentGLObjectManager")` to return a
+ * fake manager. Returns the mocks so individual tests can assert on calls.
+ */
+const installFakeNativeModule = (firstExglObjId = 1001) => {
+  let nextId = firstExglObjId;
+  const createCameraTextureAsync = jest.fn(() => Promise.resolve({ exglObjId: nextId++ }));
+  const destroyObjectAsync = jest.fn(() => Promise.resolve());
+  ExpoModulesCoreMock.requireNativeModule.mockImplementation((name: string) => {
+    if (name === "ExponentGLObjectManager") {
+      return { createCameraTextureAsync, destroyObjectAsync };
+    }
+    throw new Error(`unexpected requireNativeModule call: ${name}`);
+  });
+  return { createCameraTextureAsync, destroyObjectAsync };
+};
+
+beforeEach(() => {
+  ExpoModulesCoreMock.requireNativeModule.mockReset();
+});
 
 const mockGL = () =>
   ({
@@ -30,22 +55,36 @@ const mockGL = () =>
     getExtension: () => null,
   }) as unknown as WebGLRenderingContext;
 
-/** GL with a fake `GLViewRef.createCameraTextureAsync` so `loadNoCache` resolves. */
-const mockGLWithExtension = () => {
-  let nextId = 1;
-  return {
+/** GL whose `GLViewRef` extension exposes a fake `exglCtxId`. */
+const mockGLWithExtension = (exglCtxId = 11) =>
+  ({
     deleteTexture: () => {},
-    getExtension: (name: string) =>
-      name === "GLViewRef"
-        ? {
-            createCameraTextureAsync: () =>
-              Promise.resolve({ exglObjId: nextId++ } as unknown as WebGLTexture & {
-                exglObjId: number;
-              }),
-          }
-        : null,
-  } as unknown as WebGLRenderingContext;
-};
+    getExtension: (name: string) => (name === "GLViewRef" ? { exglCtxId } : null),
+  }) as unknown as WebGLRenderingContext;
+
+// Many tests construct synthetic textures via `new WebGLTexture()`. Node
+// has no such constructor, so install a minimal one on `globalThis`. The
+// loader reads `globalThis.WebGLTexture` directly to sidestep DOM types
+// (which type WebGLTexture as a non-constructible interface). We save and
+// restore any pre-existing value so the global doesn't leak across other
+// test files (jsdom envs may already provide their own WebGLTexture).
+const WEBGL_TEXTURE_NOT_SET = Symbol("not-set");
+let previousWebGLTexture: unknown = WEBGL_TEXTURE_NOT_SET;
+beforeAll(() => {
+  const g = globalThis as { WebGLTexture?: unknown };
+  previousWebGLTexture = "WebGLTexture" in g ? g.WebGLTexture : WEBGL_TEXTURE_NOT_SET;
+  if (typeof g.WebGLTexture !== "function") {
+    g.WebGLTexture = class WebGLTexture {};
+  }
+});
+afterAll(() => {
+  const g = globalThis as { WebGLTexture?: unknown };
+  if (previousWebGLTexture === WEBGL_TEXTURE_NOT_SET) {
+    delete g.WebGLTexture;
+  } else {
+    g.WebGLTexture = previousWebGLTexture;
+  }
+});
 
 test("canLoad rejects primitives", () => {
   const loader = new ExpoCameraTextureLoader(mockGL());
@@ -59,6 +98,11 @@ test("canLoad rejects primitives", () => {
 test("canLoad accepts a duck-typed object with _nativeTag", () => {
   const loader = new ExpoCameraTextureLoader(mockGL());
   expect(loader.canLoad({ _nativeTag: 123 })).toBe(true);
+});
+
+test("canLoad accepts a duck-typed object with nativeTag (SDK 54+)", () => {
+  const loader = new ExpoCameraTextureLoader(mockGL());
+  expect(loader.canLoad({ nativeTag: 224 })).toBe(true);
 });
 
 test("canLoad accepts a duck-typed object with __internalInstanceHandle", () => {
@@ -88,7 +132,7 @@ test("canLoad accepts a modern CameraView class instance (SDK 51+)", () => {
   // / `getNativeRef`; only the private `_cameraRef`. None of the duck-typed
   // branches match — only the `instanceof CameraView` branch saves us.
   const cameraView = new MockedCameraView();
-  cameraView._cameraRef = { current: { _nativeTag: 224 } };
+  cameraView._cameraRef = { current: { nativeTag: 224 } };
   const loader = new ExpoCameraTextureLoader(mockGL());
   expect(loader.canLoad(cameraView)).toBe(true);
 });
@@ -139,7 +183,165 @@ test("inputHash treats CameraView and its inner native ref as equivalent", () =>
   expect(loader.inputHash(cameraView)).toBe(loader.inputHash(nativeRef));
 });
 
+test("loadNoCache resolves with a texture carrying the native exglObjId", async () => {
+  const { createCameraTextureAsync } = installFakeNativeModule(1001);
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  const camera = { nativeTag: 224 };
+  const result = await loader.load({ camera, width: 1280, height: 720 });
+  // Native module called with the GL context id and host-component tag.
+  expect(createCameraTextureAsync).toHaveBeenCalledWith(11, 224);
+  expect((result.texture as { id?: number }).id).toBe(1001);
+  expect(result.texture).toBeInstanceOf(
+    (globalThis as { WebGLTexture: new () => WebGLTexture }).WebGLTexture,
+  );
+  expect(result.width).toBe(1280);
+  expect(result.height).toBe(720);
+});
+
+test("loadNoCache accepts the legacy `_nativeTag` field", async () => {
+  const { createCameraTextureAsync } = installFakeNativeModule(2002);
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(7));
+  const camera = { _nativeTag: 99 };
+  await loader.load(camera);
+  expect(createCameraTextureAsync).toHaveBeenCalledWith(7, 99);
+});
+
+test("loadNoCache resolves the tag through `getNativeRef()`", async () => {
+  // Some SDKs only expose the native ref via a method; resolveCameraTag
+  // must call it and read the tag off the returned object.
+  const { createCameraTextureAsync } = installFakeNativeModule(3003);
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  const inner = { nativeTag: 444 };
+  const camera = { getNativeRef: () => inner };
+  await loader.load({ camera, width: 1, height: 1 });
+  expect(createCameraTextureAsync).toHaveBeenCalledWith(11, 444);
+});
+
+test("loadNoCache rejects when GLViewRef extension is missing", async () => {
+  installFakeNativeModule();
+  const loader = new ExpoCameraTextureLoader(mockGL());
+  const camera = { nativeTag: 224 };
+  await expect(loader.load({ camera, width: 1, height: 1 })).rejects.toThrow(/GLViewRef/);
+});
+
+test("loadNoCache rejects when GLViewRef returns a non-numeric exglCtxId", async () => {
+  installFakeNativeModule();
+  // Some misconfigured envs hand back the extension object without an
+  // exglCtxId; the bridge would otherwise be invoked with `undefined`.
+  const gl = {
+    deleteTexture: () => {},
+    getExtension: (name: string) => (name === "GLViewRef" ? {} : null),
+  } as unknown as WebGLRenderingContext;
+  const loader = new ExpoCameraTextureLoader(gl);
+  await expect(loader.load({ camera: { nativeTag: 1 }, width: 1, height: 1 })).rejects.toThrow(
+    /exglCtxId/,
+  );
+});
+
+test("loadNoCache rejects when the camera ref has no native tag", async () => {
+  installFakeNativeModule();
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  // CameraView whose unwrapped inner ref carries neither `nativeTag` nor
+  // `_nativeTag`. The loader still recognises it via `instanceof`, but
+  // `loadNoCache` cannot resolve a tag and must reject.
+  const cameraView = new MockedCameraView();
+  cameraView._cameraRef = { current: { __internalInstanceHandle: {} } };
+  await expect(loader.load({ camera: cameraView, width: 1, height: 1 })).rejects.toThrow(
+    /native(Tag| React Native tag)/,
+  );
+});
+
+test("disposeTexture forwards the exglObjId to the native module", async () => {
+  const { destroyObjectAsync } = installFakeNativeModule(4242);
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  const camera = { nativeTag: 1 };
+  const { texture } = await loader.load({ camera, width: 1, height: 1 });
+  loader.disposeTexture(texture);
+  expect(destroyObjectAsync).toHaveBeenCalledWith(4242);
+});
+
+test("disposeTexture is best-effort when the native module is unavailable", async () => {
+  // First load to register an exglObjId for the texture.
+  installFakeNativeModule(7);
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  const { texture } = await loader.load({ camera: { nativeTag: 1 }, width: 1, height: 1 });
+  // Then make `requireNativeModule` throw, dispose must not propagate.
+  ExpoModulesCoreMock.requireNativeModule.mockImplementation(() => {
+    throw new Error("native module missing");
+  });
+  expect(() => loader.disposeTexture(texture)).not.toThrow();
+});
+
+test("disposeTexture swallows async rejections from destroyObjectAsync", async () => {
+  // Replace the manager so the destroy promise rejects.
+  const destroyObjectAsync = jest.fn(() => Promise.reject(new Error("boom")));
+  const createCameraTextureAsync = jest.fn(() => Promise.resolve({ exglObjId: 88 }));
+  ExpoModulesCoreMock.requireNativeModule.mockImplementation(() => ({
+    createCameraTextureAsync,
+    destroyObjectAsync,
+  }));
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  const { texture } = await loader.load({ camera: { nativeTag: 1 }, width: 1, height: 1 });
+  // Listen for unhandled rejections; dispose must not produce one.
+  const unhandled = jest.fn();
+  process.on("unhandledRejection", unhandled);
+  try {
+    loader.disposeTexture(texture);
+    // Flush microtasks so the rejected promise has a chance to surface.
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(destroyObjectAsync).toHaveBeenCalledWith(88);
+    expect(unhandled).not.toHaveBeenCalled();
+  } finally {
+    process.off("unhandledRejection", unhandled);
+  }
+});
+
+test("loadNoCache rejects when requireNativeModule throws synchronously", async () => {
+  ExpoModulesCoreMock.requireNativeModule.mockImplementation(() => {
+    throw new Error("ExponentGLObjectManager not registered");
+  });
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  // The bridge never gets called and we get a proper rejection rather than
+  // a synchronous throw out of loadNoCache.
+  await expect(loader.load({ camera: { nativeTag: 1 }, width: 1, height: 1 })).rejects.toThrow(
+    /ExponentGLObjectManager/,
+  );
+});
+
+test("a cancelled load destroys the EXGL object once it resolves", async () => {
+  // Defer the createCameraTextureAsync resolution so we can call dispose
+  // between load() and the bridge response. Without the cleanup hook this
+  // would leak the native EXGL object created on the GPU.
+  let resolveCreate: (v: { exglObjId: number }) => void = () => {};
+  const createCameraTextureAsync = jest.fn(
+    () => new Promise<{ exglObjId: number }>((resolve) => (resolveCreate = resolve)),
+  );
+  const destroyObjectAsync = jest.fn(() => Promise.resolve());
+  ExpoModulesCoreMock.requireNativeModule.mockImplementation(() => ({
+    createCameraTextureAsync,
+    destroyObjectAsync,
+  }));
+  const loader = new ExpoCameraTextureLoader(mockGLWithExtension(11));
+  // Reach into the protected loadNoCache to grab the dispose hook directly.
+  const camera = { nativeTag: 1 };
+  const { promise, dispose } = (
+    loader as unknown as {
+      loadNoCache: (input: { camera: { nativeTag: number }; width: number; height: number }) => {
+        promise: Promise<unknown>;
+        dispose: () => void;
+      };
+    }
+  ).loadNoCache({ camera, width: 1, height: 1 });
+  dispose();
+  resolveCreate({ exglObjId: 555 });
+  // Race the never-ending promise against a microtask drain so the test
+  // doesn't hang. The destroy call must have fired regardless.
+  await Promise.race([promise, new Promise((r) => setImmediate(r))]);
+  expect(destroyObjectAsync).toHaveBeenCalledWith(555);
+});
+
 test("load returns the explicit width/height when given the wrapper shape", async () => {
+  installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGLWithExtension());
   const camera = { _nativeTag: 7 };
   const result = await loader.load({ camera, width: 1280, height: 720 });
@@ -148,6 +350,7 @@ test("load returns the explicit width/height when given the wrapper shape", asyn
 });
 
 test("load returns 0/0 dimensions when given a bare ref", async () => {
+  installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGLWithExtension());
   const camera = { _nativeTag: 8 };
   const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -161,6 +364,7 @@ test("load returns 0/0 dimensions when given a bare ref", async () => {
 });
 
 test("the missing-dimensions warning fires exactly once per loader", async () => {
+  installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGLWithExtension());
   const a = { _nativeTag: 9 };
   const b = { _nativeTag: 10 };
@@ -176,6 +380,7 @@ test("the missing-dimensions warning fires exactly once per loader", async () =>
 });
 
 test("the warning does not fire when callers provide explicit dimensions", async () => {
+  installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGLWithExtension());
   const camera = { _nativeTag: 11 };
   const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -188,6 +393,7 @@ test("the warning does not fire when callers provide explicit dimensions", async
 });
 
 test("explicit dimensions on a re-load update a previously cached 0/0 result", async () => {
+  installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGLWithExtension());
   const camera = { _nativeTag: 12 };
   const warn = jest.spyOn(console, "warn").mockImplementation(() => {});

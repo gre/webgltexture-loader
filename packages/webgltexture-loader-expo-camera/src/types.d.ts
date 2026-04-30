@@ -1,9 +1,11 @@
 declare module "expo-modules-core" {
-  export const NativeModulesProxy: {
-    ExponentGLObjectManager?: {
-      destroyObjectAsync?: (exglObjId: number) => Promise<void>;
-    };
-  };
+  /**
+   * Resolves a native module by name. We pull `ExponentGLObjectManager`
+   * through this path because on Expo SDK 54+ the older
+   * `NativeModulesProxy.ExponentGLObjectManager` lookup returns `undefined`
+   * even when the module is installed and working.
+   */
+  export function requireNativeModule<T>(name: string): T;
 }
 
 declare module "expo-camera" {
@@ -14,7 +16,7 @@ declare module "expo-camera" {
   export class Camera {}
   // `CameraView` is the modern (SDK 51+) functional component. The shape
   // here is intentionally loose — we only care about ref-shaped objects.
-  // Refs typically expose one of: `_nativeTag`, `__internalInstanceHandle`,
-  // or `getNativeRef()`.
+  // Refs typically expose one of: `nativeTag`, `_nativeTag`,
+  // `__internalInstanceHandle`, or `getNativeRef()`.
   export class CameraView {}
 }
