@@ -17,8 +17,14 @@ export default class ExpoGLObjectTextureLoader extends WebGLTextureLoaderAsyncHa
   override canLoad(input: unknown): boolean {
     if (!available && !warned) {
       warned = true;
-      console.log(
-        "webgltexture-loader-expo: ExponentGLObjectManager.createObjectAsync is not available. Make sure to use the correct version of Expo",
+      // This is a legacy fallback loader. It only activates on Expo
+      // SDKs that still expose `ExponentGLObjectManager.createObjectAsync`;
+      // modern SDKs (51+) have removed it. Demote to debug so it doesn't
+      // misleadingly imply the user is on the wrong Expo version.
+      console.debug(
+        "webgltexture-loader-expo: ExponentGLObjectManager.createObjectAsync " +
+          "is not available on this Expo SDK; the deprecated GLObject loader " +
+          "will not be used. This is expected on Expo SDK 51+.",
       );
     }
     return available && typeof input === "object" && input !== null;
