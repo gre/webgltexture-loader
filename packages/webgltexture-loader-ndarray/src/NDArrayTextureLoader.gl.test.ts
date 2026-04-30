@@ -110,18 +110,19 @@ describeGL("NDArrayTextureLoader against headless-gl", () => {
   // Integer dtype fallbacks under WebGL1.
   // headless-gl is WebGL1 only, so the WebGL2 integer texture paths
   // (R16UI, RG16UI, ...) cannot be exercised in CI. We only cover the
-  // uint8 fallback and the one-time console.warn behavior here.
-  // We isolate the module to reset the per-process warned-dtype memoization
-  // between tests.
+  // uint8 fallback + one-time console.warn behavior here.
+  //
+  // We isolate `drawNDArrayTexture` (not the loader) so each test gets a
+  // fresh `warnedFallbackDtypes` Set without re-running
+  // `NDArrayTextureLoader.ts`'s side-effectful `globalRegistry.add(...)` call,
+  // which would accumulate duplicate registrations across the test process.
   describe("integer dtype fallback (WebGL1)", () => {
     let warnSpy: jest.SpyInstance;
-    let LoaderCtor: typeof NDArrayTextureLoader;
-    let nd: typeof ndarray;
+    let drawFn: typeof import("./drawNDArrayTexture.js").default;
 
     beforeEach(() => {
       jest.isolateModules(() => {
-        LoaderCtor = require("./NDArrayTextureLoader.js").default;
-        nd = require("ndarray");
+        drawFn = require("./drawNDArrayTexture.js").default;
       });
       warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
     });
@@ -130,27 +131,32 @@ describeGL("NDArrayTextureLoader against headless-gl", () => {
       warnSpy.mockRestore();
     });
 
+    function uploadIntegerDtype(arr: ReturnType<typeof ndarray>): WebGLTexture {
+      const tex = gl.createTexture();
+      if (!tex) throw new Error("createTexture failed");
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      drawFn(gl, arr, false);
+      return tex;
+    }
+
     test("uint16 ndarray on WebGL1 warns once and creates a fallback texture", () => {
-      const loader = new LoaderCtor(gl);
       const data = new Uint16Array([1, 2, 3, 4]);
-      const arr = nd(data, [2, 2]);
-      const result = loader.get(arr);
-      expect(result.width).toBe(2);
-      expect(result.height).toBe(2);
-      expect(gl.isTexture(result.texture)).toBe(true);
+      const arr = ndarray(data, [2, 2]);
+      const tex = uploadIntegerDtype(arr);
+      expect(gl.isTexture(tex)).toBe(true);
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy.mock.calls[0][0]).toMatch(/uint16/);
-      loader.dispose();
+      gl.deleteTexture(tex);
     });
 
     test("loading the same dtype twice only warns once", () => {
-      const loader = new LoaderCtor(gl);
-      const a = nd(new Uint16Array([1, 2, 3, 4]), [2, 2]);
-      const b = nd(new Uint16Array([5, 6, 7, 8]), [2, 2]);
-      loader.get(a);
-      loader.get(b);
+      const a = ndarray(new Uint16Array([1, 2, 3, 4]), [2, 2]);
+      const b = ndarray(new Uint16Array([5, 6, 7, 8]), [2, 2]);
+      const ta = uploadIntegerDtype(a);
+      const tb = uploadIntegerDtype(b);
       expect(warnSpy).toHaveBeenCalledTimes(1);
-      loader.dispose();
+      gl.deleteTexture(ta);
+      gl.deleteTexture(tb);
     });
   });
 });
