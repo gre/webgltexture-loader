@@ -1,3 +1,6 @@
+// `globalShim.js` is imported by `NDArrayTextureLoader.ts` (this package's
+// entry point) before any path reaches typedarray-pool, so we don't repeat
+// the side-effect import here.
 import type { NdArray } from "ndarray";
 import ndarray from "ndarray";
 import ops from "ndarray-ops";
@@ -5,12 +8,6 @@ import pool from "typedarray-pool";
 
 // Some of the texImage2D logic below is adapted from
 // https://github.com/stackgl/gl-texture2d/blob/master/texture.js
-
-type GlobalWithBuffer = { Buffer?: { isBuffer: (b: unknown) => boolean } };
-// Browser shim so typedarray-pool's Buffer.isBuffer check doesn't crash.
-if (typeof (globalThis as GlobalWithBuffer).Buffer === "undefined") {
-  (globalThis as GlobalWithBuffer).Buffer = { isBuffer: () => false };
-}
 
 function isPacked(shape: number[], stride: number[]): boolean {
   if (shape.length === 3) {

@@ -14,7 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project notes
 
 - Yarn 4 is pinned via Corepack (`packageManager` field). If `yarn` is shimmed by `proto` and refuses to run, invoke `corepack yarn ...` instead.
-- Source is TypeScript. Build is per-package `tsc` orchestrated by `yarn workspaces foreach -Apt run build` from the root (parallel topological). Tests are transformed by `ts-jest`.
+- Source is TypeScript. Build is per-package `tsc` orchestrated by `yarn workspaces foreach -Apt --no-private run build` from the root (parallel topological; `--no-private` skips private workspaces such as `apps/example-web`). Tests are transformed by `ts-jest`.
 - Peer-deps for the Expo and React Native loaders are not installed; minimal type stubs live in `packages/*/src/types.d.ts` files. Don't try to install `expo-camera` / `react-native` to type-check — keep the stubs minimal.
 - Lint / format are oxc tools: `yarn lint` (oxlint) and `yarn format` (oxfmt --check) / `yarn format:fix`. `oxfmt` has no config file yet — it uses defaults.
 - Headless GL tests use the `gl` package (`9.0.0-rc.10` for Node 24 compat). They're suffixed `*.gl.test.ts` and skip themselves if `require("gl")` throws (so local macOS without the prebuilt binding still passes the rest of the suite). CI installs `xvfb + mesa` and runs the suite under `xvfb-run`.
+- The visual smoke-test demo lives in `apps/example-web/` (Vite + vanilla TS). It is private (`"private": true`) and therefore excluded from the root `yarn build` cascade by `--no-private` so library builds stay fast; verify it standalone with `corepack yarn workspace example-web build`.

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webgltexture-loader · example-web</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0e1014;
+        --panel: #161a22;
+        --border: #2a2f3a;
+        --text: #e6e8ee;
+        --muted: #8b91a1;
+        --ok: #4caf50;
+        --pending: #f0c419;
+        --err: #ef5350;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        height: 100vh;
+      }
+      .stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        overflow: hidden;
+      }
+      #gl {
+        width: min(100%, calc(100vh * 1));
+        height: 100%;
+        display: block;
+      }
+      .sidebar {
+        border-left: 1px solid var(--border);
+        background: var(--panel);
+        padding: 16px;
+        overflow-y: auto;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 4px;
+        font-weight: 600;
+      }
+      .muted { color: var(--muted); }
+      .sources {
+        list-style: none;
+        margin: 16px 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .source {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+      }
+      .source header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .source .name { font-weight: 600; }
+      .source .pos { color: var(--muted); font-size: 11px; }
+      .source dl {
+        margin: 6px 0 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        font-size: 12px;
+      }
+      .source dt { color: var(--muted); }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .status::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .status.loading::before { background: var(--pending); }
+      .status.loaded::before { background: var(--ok); }
+      .status.failed::before { background: var(--err); }
+      .status.disposed::before { background: var(--muted); }
+      button {
+        background: #2a2f3a;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font: inherit;
+      }
+      button:hover { background: #353c4a; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      a { color: #7ab7ff; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="stage">
+        <canvas id="gl" width="1024" height="1024" aria-label="WebGL output"></canvas>
+      </div>
+      <aside class="sidebar">
+        <h1>webgltexture-loader demo</h1>
+        <div class="muted">Each quadrant samples a different loader.</div>
+        <ul id="sources" class="sources"></ul>
+        <button id="dispose">Dispose all</button>
+        <p class="muted" style="margin-top:16px">
+          Source: <a href="https://github.com/gre/webgltexture-loader">gre/webgltexture-loader</a>
+        </p>
+      </aside>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -48,3 +48,6 @@ jobs:
       - run: yarn install --immutable
       - run: yarn build
       - run: xvfb-run -s "-ac -screen 0 1280x1024x24" yarn test
+      # Smoke-build the demo app (excluded from `yarn build`'s --no-private
+      # cascade) so demo bitrot is caught against library API changes.
+      - run: yarn workspace example-web build

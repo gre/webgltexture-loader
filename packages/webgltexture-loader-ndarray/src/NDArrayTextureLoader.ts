@@ -1,3 +1,8 @@
+// Imported first so the `global`/`Buffer` polyfills run before any transitive
+// import of `typedarray-pool` (which references `global` at module top-level).
+// Anchored here — the package's published entry point — so the shim is always
+// loaded by any consumer of this loader.
+import "./globalShim.js";
 import type { NdArray } from "ndarray";
 import {
   createTexture,

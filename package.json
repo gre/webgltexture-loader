@@ -7,15 +7,16 @@
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
   "repository": "https://github.com/gre/webgltexture-loader",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "test": "jest",
-    "build": "yarn workspaces foreach -Apt run build",
+    "build": "yarn workspaces foreach -Apt --no-private run build",
     "lint": "oxlint",
-    "format": "oxfmt --check \"packages/**/*.{ts,tsx}\" \"jest.config.js\"",
-    "format:fix": "oxfmt \"packages/**/*.{ts,tsx}\" \"jest.config.js\"",
-    "typecheck": "yarn workspaces foreach -A run typecheck",
+    "format": "oxfmt --check \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" \"jest.config.js\"",
+    "format:fix": "oxfmt \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" \"jest.config.js\"",
+    "typecheck": "yarn workspaces foreach -A --no-private run typecheck",
     "changeset:version": "changeset version",
     "release": "yarn build && changeset publish"
   },

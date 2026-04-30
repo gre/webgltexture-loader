@@ -1,0 +1,24 @@
+{
+  "name": "example-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Visual smoke test for every web-side webgltexture-loader (canvas, image URL, video, ndarray).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "ndarray": "^1.0.19",
+    "webgltexture-loader": "workspace:*",
+    "webgltexture-loader-dom": "workspace:*",
+    "webgltexture-loader-ndarray": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/ndarray": "^1.0.14",
+    "typescript": "^6",
+    "vite": "^7"
+  }
+}
