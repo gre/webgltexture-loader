@@ -4,6 +4,13 @@ jest.mock(
   "expo-camera",
   () => ({
     Camera: class Camera {},
+    // Modern (SDK 51+) class component. Real instances on SDK 54 carry a
+    // private `_cameraRef = createRef()` whose `.current` is the actual
+    // native handle; the loader unwraps to that before calling Expo's GL
+    // bridge.
+    CameraView: class CameraView {
+      _cameraRef: { current: unknown } = { current: null };
+    },
   }),
   { virtual: true },
 );
@@ -59,16 +66,31 @@ test("canLoad accepts a duck-typed object with __internalInstanceHandle", () => 
   expect(loader.canLoad({ __internalInstanceHandle: {} })).toBe(true);
 });
 
-// Pull the mocked `Camera` class the loader sees, via `jest.requireMock`
-// so we hit the same module identity. Instances do not have `_nativeTag` /
-// `__internalInstanceHandle` / `getNativeRef`, so this exercises the
-// `instanceof` back-compat path.
-const MockedCamera = jest.requireMock<{ Camera: new () => unknown }>("expo-camera").Camera;
+// Pull the mocked `Camera` / `CameraView` classes the loader sees, via
+// `jest.requireMock` so we hit the same module identity. Instances do not
+// have `_nativeTag` / `__internalInstanceHandle` / `getNativeRef`, so they
+// exercise the `instanceof` back-compat / modern paths.
+const ExpoCameraMock = jest.requireMock<{
+  Camera: new () => unknown;
+  CameraView: new () => { _cameraRef: { current: unknown } };
+}>("expo-camera");
+const MockedCamera = ExpoCameraMock.Camera;
+const MockedCameraView = ExpoCameraMock.CameraView;
 
 test("canLoad accepts a legacy Camera class instance (SDK <= 50)", () => {
   const legacyInstance = new MockedCamera();
   const loader = new ExpoCameraTextureLoader(mockGL());
   expect(loader.canLoad(legacyInstance)).toBe(true);
+});
+
+test("canLoad accepts a modern CameraView class instance (SDK 51+)", () => {
+  // Real SDK 54 instance shape: no `_nativeTag` / `__internalInstanceHandle`
+  // / `getNativeRef`; only the private `_cameraRef`. None of the duck-typed
+  // branches match — only the `instanceof CameraView` branch saves us.
+  const cameraView = new MockedCameraView();
+  cameraView._cameraRef = { current: { _nativeTag: 224 } };
+  const loader = new ExpoCameraTextureLoader(mockGL());
+  expect(loader.canLoad(cameraView)).toBe(true);
 });
 
 test("canLoad accepts the { camera, width, height } wrapper shape", () => {
@@ -92,6 +114,29 @@ test("inputHash returns different values for different refs", () => {
   const a = { _nativeTag: 1 };
   const b = { _nativeTag: 2 };
   expect(loader.inputHash(a)).not.toBe(loader.inputHash(b));
+});
+
+test("inputHash is idempotent across the CameraView wrapper", () => {
+  // Two calls with the same CameraView wrapper must produce the same hash —
+  // the unwrap step keys on `_cameraRef.current`, not the wrapper identity.
+  const loader = new ExpoCameraTextureLoader(mockGL());
+  const cameraView = new MockedCameraView();
+  cameraView._cameraRef = { current: { _nativeTag: 224 } };
+  const h1 = loader.inputHash(cameraView);
+  const h2 = loader.inputHash(cameraView);
+  expect(h1).toBe(h2);
+});
+
+test("inputHash treats CameraView and its inner native ref as equivalent", () => {
+  // The whole point of unwrapping inside `inputHash`: the WeakMap-based
+  // hash counter MUST key on the native ref, otherwise dispose / cache
+  // invariants get desynced when callers pass the wrapper in one place
+  // and the unwrapped ref in another.
+  const loader = new ExpoCameraTextureLoader(mockGL());
+  const nativeRef = { _nativeTag: 224 };
+  const cameraView = new MockedCameraView();
+  cameraView._cameraRef = { current: nativeRef };
+  expect(loader.inputHash(cameraView)).toBe(loader.inputHash(nativeRef));
 });
 
 test("load returns the explicit width/height when given the wrapper shape", async () => {

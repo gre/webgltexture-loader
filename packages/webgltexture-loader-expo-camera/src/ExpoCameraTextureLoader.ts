@@ -7,6 +7,7 @@ import { NativeModulesProxy } from "expo-modules-core";
 import { globalRegistry, WebGLTextureLoaderAsyncHashCache } from "webgltexture-loader";
 
 const LegacyCamera: unknown = (ExpoCameraModule as { Camera?: unknown }).Camera;
+const CameraView: unknown = (ExpoCameraModule as { CameraView?: unknown }).CameraView;
 
 const neverEnding: Promise<never> = new Promise(() => {});
 
@@ -18,16 +19,21 @@ const neverEnding: Promise<never> = new Promise(() => {});
  * - `_nativeTag` — RN class component / ref-forwarded class (legacy `Camera`).
  * - `__internalInstanceHandle` — RN New Architecture (Fabric) ref.
  * - `getNativeRef()` — `CameraView`'s pattern in some SDKs.
+ * - `instanceof CameraView` — modern (SDK 51+) class component instance.
+ *   Its real native ref is at `instance._cameraRef.current`; we unwrap to
+ *   that before calling Expo's GL bridge (see `unwrapNativeCameraRef`).
  *
  * As a back-compat fallback we also accept anything that is `instanceof`
- * the legacy `Camera` class. The class is read off the namespace import
- * (rather than a named import) and gated behind `typeof === "function"`,
- * so SDKs that drop the export entirely don't crash at module load.
+ * the legacy `Camera` class. Both class references are read off the
+ * namespace import (rather than a named import) and gated behind
+ * `typeof === "function"`, so SDKs that drop the export entirely don't
+ * crash at module load.
  */
 type LegacyCameraOrCameraViewRef = {
   _nativeTag?: unknown;
   __internalInstanceHandle?: unknown;
   getNativeRef?: () => unknown;
+  _cameraRef?: { current?: unknown };
 };
 
 type CameraInputObject = {
@@ -51,10 +57,31 @@ function isCameraRef(value: unknown): value is LegacyCameraOrCameraViewRef {
   if ("_nativeTag" in obj) return true;
   if ("__internalInstanceHandle" in obj) return true;
   if (typeof obj.getNativeRef === "function") return true;
+  // Modern (SDK 51+) `CameraView` class instance. Its native ref lives at
+  // `_cameraRef.current` and gets unwrapped in `unwrapNativeCameraRef`.
+  if (typeof CameraView === "function" && value instanceof CameraView) return true;
   // Back-compat: legacy `Camera` class instance. The guard handles SDKs
   // where the export is missing entirely (read off the namespace above).
   if (typeof LegacyCamera === "function" && value instanceof LegacyCamera) return true;
   return false;
+}
+
+/**
+ * `CameraView` (SDK 51+) is a React class wrapper, not a native handle. The
+ * real ref lives at `instance._cameraRef.current` (see expo-camera's
+ * `CameraView.js`, which declares `_cameraRef = createRef()` and renders
+ * `<ExpoCamera ... ref={this._cameraRef}>`). Unwrap so both the GL bridge
+ * call AND the `inputHash` WeakMap key on the same identity — otherwise
+ * dispose / cache invariants get desynced.
+ */
+function unwrapNativeCameraRef(input: LegacyCameraOrCameraViewRef): LegacyCameraOrCameraViewRef {
+  if (typeof CameraView === "function" && input instanceof CameraView) {
+    const inner = input._cameraRef?.current;
+    if (inner && typeof inner === "object") {
+      return inner as LegacyCameraOrCameraViewRef;
+    }
+  }
+  return input;
 }
 
 /** Duck-type check: does `value` look like the `{ camera, width, height }` wrapper? */
@@ -93,9 +120,16 @@ export default class ExpoCameraTextureLoader extends WebGLTextureLoaderAsyncHash
     this.objIds.delete(texture);
   }
 
-  /** Unwrap a `CameraInput` to the underlying ref. */
+  /**
+   * Unwrap a `CameraInput` to the underlying native ref. Strips the
+   * `{ camera, width, height }` wrapper, then unwraps `CameraView` to its
+   * inner `_cameraRef.current`. Used by both `inputHash` (so the WeakMap
+   * keys on the native ref) and `loadNoCache` (so the GL bridge gets a
+   * native handle, not the React wrapper).
+   */
   private unwrap(input: CameraInput): LegacyCameraOrCameraViewRef {
-    return isCameraInputObject(input) ? input.camera : input;
+    const ref = isCameraInputObject(input) ? input.camera : input;
+    return unwrapNativeCameraRef(ref);
   }
 
   override inputHash(input: CameraInput): number {
