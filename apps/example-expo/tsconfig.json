@@ -11,5 +11,5 @@
     "allowSyntheticDefaultImports": true,
     "types": ["react", "react-native"]
   },
-  "include": ["App.tsx"]
+  "include": ["App.tsx", "index.ts"]
 }

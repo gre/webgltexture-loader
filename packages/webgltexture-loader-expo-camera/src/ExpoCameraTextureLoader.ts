@@ -32,8 +32,9 @@ interface ExpoGLObjectManager {
  * The `GLViewRef` extension that older expo-gl SDKs injected into the WebGL
  * context. Typed loosely because the runtime shape varies by SDK; we validate
  * `exglCtxId` is a number before using it. SDK 54 stops shipping the
- * extension and exposes the same id as `gl.__exglCtxId` instead, so we try
- * that property first and fall back to the extension.
+ * extension and exposes the same id as `gl.contextId` (with a legacy
+ * `gl.__exglCtxId` mirror on some intermediate builds); the extension is the
+ * last fallback. See `resolveExglCtxId` below for the full lookup order.
  */
 interface GLViewRefExtension {
   exglCtxId?: unknown;
