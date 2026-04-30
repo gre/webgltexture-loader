@@ -17,6 +17,7 @@
   },
   "changesets": [
     "fix-cameraview-ref",
+    "fix-expo-cam-native-module",
     "v2-1-0-alpha"
   ]
 }
