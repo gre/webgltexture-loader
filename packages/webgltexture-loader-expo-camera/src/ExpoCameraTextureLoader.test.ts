@@ -255,9 +255,7 @@ test("loadNoCache rejects when no path exposes the EXGL context id", async () =>
   installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGL());
   const camera = { nativeTag: 224 };
-  await expect(loader.load({ camera, width: 1, height: 1 })).rejects.toThrow(
-    /EXGL context id/,
-  );
+  await expect(loader.load({ camera, width: 1, height: 1 })).rejects.toThrow(/EXGL context id/);
 });
 
 test("loadNoCache rejects when GLViewRef returns a non-numeric exglCtxId", async () => {
