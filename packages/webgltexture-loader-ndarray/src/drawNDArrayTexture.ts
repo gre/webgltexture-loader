@@ -147,9 +147,17 @@ export default function drawNDArrayTexture(
   // Resolve final `type` before picking internalformat: on WebGL2 the
   // internalformat must match the data type (e.g. RGB32F requires FLOAT,
   // not UNSIGNED_BYTE), so we need the post-fallback `type` here.
-  // ALPHA / LUMINANCE_ALPHA have no usable float internalformat on WebGL2,
-  // so we force the uint8 path for those shapes when running on WebGL2.
-  if (!isWebGL1 && type === gl.FLOAT && shape.length === 3 && (shape[2] === 1 || shape[2] === 2)) {
+  //
+  // Single- and two-channel shapes get mapped to LUMINANCE / ALPHA /
+  // LUMINANCE_ALPHA below. WebGL2 has no FLOAT-typed combination valid
+  // with those legacy formats (the spec table only lists UNSIGNED_BYTE),
+  // so force the uint8 fallback for them when running on WebGL2. This
+  // covers both 2D shapes (single channel) and 3D shapes with 1–2 channels.
+  if (
+    !isWebGL1 &&
+    type === gl.FLOAT &&
+    (shape.length === 2 || (shape.length === 3 && (shape[2] === 1 || shape[2] === 2)))
+  ) {
     floatSupported = false;
   }
   if (type === gl.FLOAT && !floatSupported) {

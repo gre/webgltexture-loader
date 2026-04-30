@@ -170,6 +170,30 @@ describe("drawNDArrayTexture WebGL2 integer paths (mocked context)", () => {
     expect(upload.type).toBe(expected.UNSIGNED_SHORT);
   });
 
+  // WebGL2 has no `texImage2D` combination that pairs LUMINANCE / ALPHA /
+  // LUMINANCE_ALPHA with FLOAT. Without a guard we'd happily call
+  // texImage2D(..., LUMINANCE, FLOAT, ...) and trip INVALID_ENUM. Confirm
+  // float 2D and float 1-/2-channel 3D shapes get downgraded to UNSIGNED_BYTE.
+  test("2D float ndarray on WebGL2 is downgraded to UNSIGNED_BYTE", () => {
+    const { gl, texImage2D } = makeMockWebGL2();
+    const arr = ndarray(new Float32Array(4), [2, 2]);
+    drawNDArrayTexture(gl, arr, true);
+    const upload = lastUpload(texImage2D);
+    const expected = gl as unknown as Record<string, number>;
+    expect(upload.type).toBe(expected.UNSIGNED_BYTE);
+    expect(upload.format).toBe(expected.LUMINANCE);
+  });
+
+  test("3D float 1-channel ndarray on WebGL2 is downgraded to UNSIGNED_BYTE", () => {
+    const { gl, texImage2D } = makeMockWebGL2();
+    const arr = ndarray(new Float32Array(4), [2, 2, 1]);
+    drawNDArrayTexture(gl, arr, true);
+    const upload = lastUpload(texImage2D);
+    const expected = gl as unknown as Record<string, number>;
+    expect(upload.type).toBe(expected.UNSIGNED_BYTE);
+    expect(upload.format).toBe(expected.ALPHA);
+  });
+
   // The function saves/restores UNPACK_ALIGNMENT to 1 around the upload so
   // odd row byte sizes (frequent for integer dtypes) don't get corrupted.
   test("UNPACK_ALIGNMENT is set to 1 then restored to its previous value", () => {
