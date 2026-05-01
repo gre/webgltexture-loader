@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-expo-camera",
-  "version": "2.1.0-alpha.3",
+  "version": "2.1.0",
   "description": "load camera expo 'config' object for webgltexture-loader",
   "license": "MIT",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "webgltexture-loader": "^2.1.0-alpha.0"
+    "webgltexture-loader": "^2.1.0"
   },
   "peerDependencies": {
     "expo-camera": "*",
