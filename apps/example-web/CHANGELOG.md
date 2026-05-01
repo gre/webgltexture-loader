@@ -1,5 +1,14 @@
 # example-web
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies
+  - webgltexture-loader@2.1.1
+  - webgltexture-loader-dom@2.1.1
+  - webgltexture-loader-ndarray@2.1.1
+
 ## 0.0.1
 
 ### Patch Changes

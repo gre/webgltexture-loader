@@ -1,5 +1,28 @@
 # webgltexture-loader-dom-video
 
+## 2.1.1
+
+### Patch Changes
+
+- Re-publish v2.1.0 with the missing `lib/` directory.
+
+  The 2.1.0 release was published from a tree where `tsc` had not been run,
+  so the tarballs shipped only `src/` and every `require()` failed with
+  "Cannot find module 'lib/index.js'". This release re-ships every package
+  with the compiled JS + `.d.ts` artifacts.
+
+  Defense in depth:
+
+  - Each publishable package now has `"prepack": "tsc"`, so `npm publish`
+    rebuilds `lib/` regardless of how it's invoked.
+  - The root `release` script is now a guard wrapper (`scripts/release.sh`)
+    that runs `yarn build`, then verifies each package's declared `main`
+    file actually exists on disk before delegating to `changeset publish`.
+    Aborts with a clear error if any artifact is missing.
+
+- Updated dependencies
+  - webgltexture-loader@2.1.1
+
 ## 2.1.0
 
 ### Minor Changes

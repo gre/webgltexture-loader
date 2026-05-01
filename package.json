@@ -18,7 +18,7 @@
     "format:fix": "oxfmt \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" \"jest.config.js\"",
     "typecheck": "yarn workspaces foreach -A --no-private run typecheck",
     "changeset:version": "changeset version",
-    "release": "yarn build && changeset publish"
+    "release": "./scripts/release.sh"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
