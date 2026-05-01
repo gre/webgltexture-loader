@@ -1,5 +1,26 @@
 # webgltexture-loader-dom-video
 
+## 2.1.2
+
+### Patch Changes
+
+- Lower TypeScript `target` from ES2022 to ES2021 so loaders that use
+  `static priority = N` compile to a post-class assignment instead of a
+  `static { ... }` block.
+
+  `babel-preset-expo` shipped with Expo SDK 53 doesn't include
+  `@babel/plugin-transform-class-static-block`, so the SDK 53 Metro
+  bundler choked on `static { this.priority = -200; }` with
+  `SyntaxError: Static class blocks are not enabled`.
+
+  ES2021 still keeps `??=`, `||=`, `?.()`, optional chaining, and
+  nullish coalescing, which are all natively supported by every runtime
+  this lib targets (Hermes, V8, modern browsers). Public API unchanged;
+  consumers just retarball.
+
+- Updated dependencies
+  - webgltexture-loader@2.1.2
+
 ## 2.1.1
 
 ### Patch Changes

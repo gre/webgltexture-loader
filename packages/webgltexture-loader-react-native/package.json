@@ -1,6 +1,6 @@
 {
   "name": "webgltexture-loader-react-native",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "collection of webgltexture-loader in react-native-webgl implementation context",
   "license": "MIT",
   "author": "Gaëtan Renaudeau <renaudeau.gaetan@gmail.com>",
@@ -17,7 +17,7 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "webgltexture-loader-react-native-config": "^2.1.1",
-    "webgltexture-loader-react-native-imagesource": "^2.1.1"
+    "webgltexture-loader-react-native-config": "^2.1.2",
+    "webgltexture-loader-react-native-imagesource": "^2.1.2"
   }
 }

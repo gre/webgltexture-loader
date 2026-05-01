@@ -1,5 +1,13 @@
 # example-expo
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies
+  - webgltexture-loader@2.1.2
+  - webgltexture-loader-expo-camera@2.1.2
+
 ## 0.0.2
 
 ### Patch Changes
