@@ -13,11 +13,13 @@
     "webgltexture-loader-ndarray": "2.0.0",
     "webgltexture-loader-react-native": "2.0.0",
     "webgltexture-loader-react-native-config": "2.0.0",
-    "webgltexture-loader-react-native-imagesource": "2.0.0"
+    "webgltexture-loader-react-native-imagesource": "2.0.0",
+    "example-expo": "0.0.1-alpha.0"
   },
   "changesets": [
     "fix-cameraview-ref",
     "fix-expo-cam-native-module",
+    "fix-resolve-exgl-ctx-id",
     "v2-1-0-alpha"
   ]
 }
