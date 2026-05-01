@@ -1,0 +1,30 @@
+{
+  "name": "example-expo",
+  "version": "0.0.1-alpha.0",
+  "private": true,
+  "description": "Manual smoke test for the Expo loaders (camera-texture path) on a real device via Expo Go.",
+  "license": "MIT",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "~54.0.0",
+    "expo-camera": "~17.0.10",
+    "expo-gl": "~16.0.10",
+    "expo-modules-core": "~3.0.0",
+    "expo-status-bar": "~3.0.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "webgltexture-loader": "workspace:*",
+    "webgltexture-loader-expo-camera": "workspace:*"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~19.1.0",
+    "typescript": "^6"
+  }
+}

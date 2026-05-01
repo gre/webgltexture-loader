@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "example-expo",
+    "slug": "webgltexture-loader-example-expo",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This demo uses the camera to feed live frames into a WebGL texture loader."
+      }
+    },
+    "android": {
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera so it can feed frames into a WebGL shader."
+        }
+      ]
+    ]
+  }
+}

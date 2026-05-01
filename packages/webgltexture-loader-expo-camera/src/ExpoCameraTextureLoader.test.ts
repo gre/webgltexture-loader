@@ -55,11 +55,27 @@ const mockGL = () =>
     getExtension: () => null,
   }) as unknown as WebGLRenderingContext;
 
-/** GL whose `GLViewRef` extension exposes a fake `exglCtxId`. */
+/** GL whose `GLViewRef` extension exposes a fake `exglCtxId` (older SDKs). */
 const mockGLWithExtension = (exglCtxId = 11) =>
   ({
     deleteTexture: () => {},
     getExtension: (name: string) => (name === "GLViewRef" ? { exglCtxId } : null),
+  }) as unknown as WebGLRenderingContext;
+
+/** GL with `contextId` set directly on the context (SDK 54+ public API). */
+const mockGLWithContextId = (contextId = 11) =>
+  ({
+    contextId,
+    deleteTexture: () => {},
+    getExtension: () => null,
+  }) as unknown as WebGLRenderingContext;
+
+/** GL with `__exglCtxId` set directly on the context (older internal API). */
+const mockGLWithDunderExgl = (id = 11) =>
+  ({
+    __exglCtxId: id,
+    deleteTexture: () => {},
+    getExtension: () => null,
   }) as unknown as WebGLRenderingContext;
 
 // Many tests construct synthetic textures via `new WebGLTexture()`. Node
@@ -217,11 +233,29 @@ test("loadNoCache resolves the tag through `getNativeRef()`", async () => {
   expect(createCameraTextureAsync).toHaveBeenCalledWith(11, 444);
 });
 
-test("loadNoCache rejects when GLViewRef extension is missing", async () => {
+test("loadNoCache resolves via gl.contextId on SDK 54+", async () => {
+  // SDK 54 stops shipping the GLViewRef extension and exposes the EXGL
+  // context id directly as `gl.contextId` instead.
+  const { createCameraTextureAsync } = installFakeNativeModule(4004);
+  const loader = new ExpoCameraTextureLoader(mockGLWithContextId(54));
+  await loader.load({ camera: { nativeTag: 17 }, width: 1, height: 1 });
+  expect(createCameraTextureAsync).toHaveBeenCalledWith(54, 17);
+});
+
+test("loadNoCache resolves via gl.__exglCtxId fallback", async () => {
+  // Some older internal expo-gl builds put the id on `gl.__exglCtxId`
+  // instead of either `contextId` or the GLViewRef extension.
+  const { createCameraTextureAsync } = installFakeNativeModule(5005);
+  const loader = new ExpoCameraTextureLoader(mockGLWithDunderExgl(33));
+  await loader.load({ camera: { nativeTag: 8 }, width: 1, height: 1 });
+  expect(createCameraTextureAsync).toHaveBeenCalledWith(33, 8);
+});
+
+test("loadNoCache rejects when no path exposes the EXGL context id", async () => {
   installFakeNativeModule();
   const loader = new ExpoCameraTextureLoader(mockGL());
   const camera = { nativeTag: 224 };
-  await expect(loader.load({ camera, width: 1, height: 1 })).rejects.toThrow(/GLViewRef/);
+  await expect(loader.load({ camera, width: 1, height: 1 })).rejects.toThrow(/EXGL context id/);
 });
 
 test("loadNoCache rejects when GLViewRef returns a non-numeric exglCtxId", async () => {
