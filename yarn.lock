@@ -4143,11 +4143,11 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^5.0.5":
-  version: 5.0.5
-  resolution: "brace-expansion@npm:5.0.5"
+  version: 5.0.6
+  resolution: "brace-expansion@npm:5.0.6"
   dependencies:
     balanced-match: "npm:^4.0.2"
-  checksum: 10c0/4d238e14ed4f5cc9c07285550a41cef23121ca08ba99fa9eb5b55b580dcb6bf868b8210aa10526bdc9f8dc97f33ca2a7259039c4cc131a93042beddb424c48e3
+  checksum: 10c0/8c919869b90f61d533b341d3340be5ee4413232ea89b8246cbc2f38eb014f1d8182785c98a006eaf6111d02dc9eeffefdc240d5ac158625b2ed084dccd4bbf9b
   languageName: node
   linkType: hard
 
@@ -9948,27 +9948,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webgltexture-loader-dom-canvas@npm:^2.1.0-alpha.0, webgltexture-loader-dom-canvas@workspace:packages/webgltexture-loader-dom-canvas":
+"webgltexture-loader-dom-canvas@npm:^2.1.2, webgltexture-loader-dom-canvas@workspace:packages/webgltexture-loader-dom-canvas":
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-dom-canvas@workspace:packages/webgltexture-loader-dom-canvas"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
-"webgltexture-loader-dom-image-url@npm:^2.1.0-alpha.0, webgltexture-loader-dom-image-url@workspace:packages/webgltexture-loader-dom-image-url":
+"webgltexture-loader-dom-image-url@npm:^2.1.2, webgltexture-loader-dom-image-url@workspace:packages/webgltexture-loader-dom-image-url":
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-dom-image-url@workspace:packages/webgltexture-loader-dom-image-url"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
-"webgltexture-loader-dom-video@npm:^2.1.0-alpha.0, webgltexture-loader-dom-video@workspace:packages/webgltexture-loader-dom-video":
+"webgltexture-loader-dom-video@npm:^2.1.2, webgltexture-loader-dom-video@workspace:packages/webgltexture-loader-dom-video":
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-dom-video@workspace:packages/webgltexture-loader-dom-video"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
@@ -9976,9 +9976,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-dom@workspace:packages/webgltexture-loader-dom"
   dependencies:
-    webgltexture-loader-dom-canvas: "npm:^2.1.0-alpha.0"
-    webgltexture-loader-dom-image-url: "npm:^2.1.0-alpha.0"
-    webgltexture-loader-dom-video: "npm:^2.1.0-alpha.0"
+    webgltexture-loader-dom-canvas: "npm:^2.1.2"
+    webgltexture-loader-dom-image-url: "npm:^2.1.2"
+    webgltexture-loader-dom-video: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
@@ -9986,7 +9986,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-expo-camera@workspace:packages/webgltexture-loader-expo-camera"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   peerDependencies:
     expo-camera: "*"
     expo-modules-core: "*"
@@ -9997,7 +9997,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-expo@workspace:packages/webgltexture-loader-expo"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   peerDependencies:
     expo-asset: "*"
     expo-modules-core: "*"
@@ -10032,23 +10032,23 @@ __metadata:
     ndarray: "npm:^1.0.19"
     ndarray-ops: "npm:^1.2.2"
     typedarray-pool: "npm:^1.2.0"
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
-"webgltexture-loader-react-native-config@npm:^2.1.0-alpha.0, webgltexture-loader-react-native-config@workspace:packages/webgltexture-loader-react-native-config":
+"webgltexture-loader-react-native-config@npm:^2.1.2, webgltexture-loader-react-native-config@workspace:packages/webgltexture-loader-react-native-config":
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-react-native-config@workspace:packages/webgltexture-loader-react-native-config"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
-"webgltexture-loader-react-native-imagesource@npm:^2.1.0-alpha.0, webgltexture-loader-react-native-imagesource@workspace:packages/webgltexture-loader-react-native-imagesource":
+"webgltexture-loader-react-native-imagesource@npm:^2.1.2, webgltexture-loader-react-native-imagesource@workspace:packages/webgltexture-loader-react-native-imagesource":
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-react-native-imagesource@workspace:packages/webgltexture-loader-react-native-imagesource"
   dependencies:
-    webgltexture-loader: "npm:^2.1.0-alpha.0"
+    webgltexture-loader: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
@@ -10056,12 +10056,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webgltexture-loader-react-native@workspace:packages/webgltexture-loader-react-native"
   dependencies:
-    webgltexture-loader-react-native-config: "npm:^2.1.0-alpha.0"
-    webgltexture-loader-react-native-imagesource: "npm:^2.1.0-alpha.0"
+    webgltexture-loader-react-native-config: "npm:^2.1.2"
+    webgltexture-loader-react-native-imagesource: "npm:^2.1.2"
   languageName: unknown
   linkType: soft
 
-"webgltexture-loader@npm:^2.1.0-alpha.0, webgltexture-loader@workspace:*, webgltexture-loader@workspace:packages/webgltexture-loader":
+"webgltexture-loader@npm:^2.1.2, webgltexture-loader@workspace:*, webgltexture-loader@workspace:packages/webgltexture-loader":
   version: 0.0.0-use.local
   resolution: "webgltexture-loader@workspace:packages/webgltexture-loader"
   languageName: unknown
