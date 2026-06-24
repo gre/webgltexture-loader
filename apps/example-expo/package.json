@@ -23,7 +23,7 @@
     "webgltexture-loader-expo-camera": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
+    "@babel/core": "^7.29.6",
     "@types/react": "~19.1.0",
     "typescript": "^6"
   }
