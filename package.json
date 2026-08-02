@@ -21,14 +21,14 @@
     "release": "./scripts/release.sh"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^2.31.1",
     "@types/jest": "^30.0.0",
     "@types/ndarray": "^1.0.14",
     "@types/node": "^25.6.0",
     "gl": "^9.0.0-rc.10",
-    "jest": "^30.3.0",
+    "jest": "^30.4.2",
     "oxfmt": "^0.47.0",
-    "oxlint": "^1.62.0",
+    "oxlint": "^1.76.0",
     "ts-jest": "^29",
     "typescript": "^6"
   },
